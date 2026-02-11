@@ -1,4 +1,9 @@
-# Import all models at once when package gets loaded into local namespace.
+print("Invoking models module loading ...")
+
+# Import all models explicitly to ensure they are registered with SQLAlchemy.
+from .asset import Asset
+from .alert import Alert
+from .watchlist import Watchlist
+
 __all__ = ['asset', 'alert', 'watchlist']
 
-print("Invoking models module loading ...")
