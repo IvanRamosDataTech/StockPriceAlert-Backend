@@ -1,12 +1,11 @@
-# from persistance.db_manager import db
-# from ..models import *
+# !! Load script funcions using >flask shell app context only.
+# > from backend.persistance.db_utils import *
 
 # ##Demo functions to show how to interact with the database, you can run these functions in the flask shell to see how they work.
 from backend.models.asset import Asset
 from backend.models.alert import Alert
 from backend.models.watchlist import Watchlist
 from backend.persistance.db_manager import db
-
 
 def populate_database():
     # Add some assets for testing
@@ -55,9 +54,6 @@ def populate_database():
     
     db.session.commit()
 
-if __name__ == "__main__":
-    populate_database()
-
 # def update_assets():
 #     apple = Asset.query.filter_by(ticker="AAPL").first()
 #     robo = Asset.query.filter_by(ticker="ROBO").first()
@@ -82,36 +78,29 @@ if __name__ == "__main__":
 #     Asset.query.all().delete()
 #     db.session.commit()
 
-# def clean_database():
-#     db.session.query(Alert).delete()
-#     db.session.query(Asset).delete()
-#     db.session.commit()
+def clean_database():
+    db.session.query(Watchlist).delete()
+    db.session.query(Asset).delete()
+    db.session.commit()
         
-# def query_all_assets():
-#     assets = Asset.query.all()
-#     for asset in assets:
-#         print(f"Ticker: {asset.ticker}, Price: {asset.price}, Market Cap: {asset.market_cap}, Type: {asset.asset_type}")
-#         for alert in asset.alerts:
-#             print(f"  Alert ID: {alert.id}, Threshold: {alert.price_threshold}, Type: {alert.alert_type}, Min Month Price: {alert.min_month_price}")    
-#         for list in asset.watchlists:
-#             print(f"  Watchlist: {list.name}")
+def query_all_assets():
+    assets = Asset.query.all()
+    for asset in assets:
+        print(asset)
 
-# def query_asset(ticker):
-#     asset = Asset.query.filter_by(ticker=ticker).first()
-#     if asset:
-#         print(f"Ticker: {asset.ticker}, Price: {asset.price}, Market Cap: {asset.market_cap}, Type: {asset.asset_type}")
-#         for alert in asset.alerts:
-#             print(f"  Alert ID: {alert.id}, Threshold: {alert.price_threshold}, Type: {alert.alert_type}, Min Month Price: {alert.min_month_price}")    
-#         for list in asset.watchlists:
-#             print(f"  Watchlist: {list.name}")     
-#     else:
-#         print(f"No asset found with ticker: {ticker}")
+def query_asset(ticker):
+    asset = Asset.query.filter_by(ticker=ticker).first()
+    if asset:
+        print(asset)
+    else:
+        print(f"No asset found with ticker: {ticker}")
 
-# def query_watchlist(name):
-#     watchlist = Watchlist.query.filter_by(name=name).first()
-#     if watchlist:
-#         print(f"Watchlist: {watchlist.name}")
-#         for asset in watchlist.assets:
-#             print(f"  Asset Ticker: {asset.ticker}, Price: {asset.price}, Market Cap: {asset.market_cap}, Type: {asset.asset_type}")
-#     else:
-#         print(f"No watchlist found with name: {name}")
+def query_watchlist(name):
+    watchlist = Watchlist.query.filter_by(name=name).first()
+    if watchlist:
+        print(watchlist)
+    else:
+        print(f"No watchlist found with name: {name}")
+
+if __name__ == "__main__":
+    populate_database()

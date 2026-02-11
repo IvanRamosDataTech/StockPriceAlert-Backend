@@ -13,3 +13,13 @@ class Asset(db.Model):
     min_month_price = db.Column(db.Float, nullable=True)
     alerts = db.relationship('Alert', back_populates='asset', cascade='all, delete-orphan')
     watchlists = db.relationship('Watchlist', secondary=watchlist_asset, back_populates='assets')
+
+    def __str__(self):
+        info = f"<Asset {self.ticker} - {self.displayed_name}> \n"
+        info += "Alerts: \n"
+        for alert in self.alerts:
+            info += str(alert) + "; \n"
+        info += "Watchlists: \n"
+        for list in self.watchlists:
+            info += f"{list.name}; \n"
+        return info

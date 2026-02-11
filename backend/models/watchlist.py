@@ -8,3 +8,10 @@ class Watchlist(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False, unique=True)
     assets = db.relationship('Asset', secondary=watchlist_asset, back_populates='watchlists')
+
+    def __str__(self):
+        info = f"<Watchlist {self.name}>"
+        info += "Assets: \n"
+        for asset in self.assets:
+            info += str(asset.displayed_name) + "; "
+        return info
