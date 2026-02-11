@@ -2,3 +2,7 @@ venv
 .ipynb_checkpoints
 .DS_Store
 __pycache__
+
+# Ignore environment variable files with sensitive keys and tokens
+.env
+.flaskenv
