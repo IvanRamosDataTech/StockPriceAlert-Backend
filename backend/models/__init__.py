@@ -1,4 +1,4 @@
-print("Invoking models module loading ...")
+print("Loading  models subpackage ...")
 
 # Import all models explicitly to ensure they are registered with SQLAlchemy.
 from .asset import Asset
