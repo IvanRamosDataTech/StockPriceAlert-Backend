@@ -7,10 +7,19 @@ class Asset(db.Model):
 
     ticker = db.Column(db.String(10), nullable=False, primary_key=True)
     displayed_name = db.Column(db.String(20), nullable=False)
+    
+    # We'll need a previous_price to calculate price change and price change percent
+    # previous_price will persiste the last price pooled from yFinance, and will be updated with price field.
+    # If it's the first time we save an asset, previous_price will be the "open" price of session (if available).
+    # same as price as default value.
+    # previous_price = db.Column(db.Float, nullable=True)
     price = db.Column(db.Float, nullable=False)
     price_change = db.Column(db.Float, nullable=True)
     price_change_percent = db.Column(db.Float, nullable=True)
+    ## Basic statistics of price in last trailing 30 days, which can be used for alerting rules
     min_month_price = db.Column(db.Float, nullable=True)
+    # max_month_price = db.Column(db.Float, nullable=True)
+    # avg_month_price = db.Column(db.Float, nullable=True)
     alerts = db.relationship('Alert', back_populates='asset', cascade='all, delete-orphan')
     watchlists = db.relationship('Watchlist', secondary=watchlist_asset, back_populates='assets')
 
