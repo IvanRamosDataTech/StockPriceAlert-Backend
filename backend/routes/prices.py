@@ -60,3 +60,43 @@ def get_exchange_rate():
         logger.error(f"Fetched object: {exchange_rate}")
         logger.error(f"Error fetching exchange rate for pair {pair}: {e}")
         return jsonify({"error": "Failed to fetch exchange rate"}), 500
+    
+
+@price_blueprint.route('/historical', methods=['GET'])
+def get_historical_prices():
+    """
+    Endpoint to get historical prices for a ticker
+    
+    tickers should be provided as a comma-separated string in the query parameters, e.g.:
+    /api/prices/historical?
+    Parameters:
+    [tickers] A list of comma separated valid tickers e.g. tickers=AAPL,GOOGL,MSFT
+    [period] The period to fetch historical data. Valid periods: 1d,5d,1mo,3mo,6mo,1y,2y,5y,10y,ytd,max Default is 1mo
+    [interval] The interval for historical data.  Valid intervals: 1m,2m,5m,15m,30m,60m,90m,1h,1d,5d,1wk,1mo,3mo Intraday data cannot extend last 60 days
+    """
+    logger.info("/api/prices/historical route called")
+    
+    tickers = request.args.get('tickers', '')
+    selected_period = request.args.get('period', '1mo')
+    selected_interval = request.args.get('interval', '1d')
+    
+    ticker_list = [ticker.strip() for ticker in tickers.split(',') if ticker.strip()]
+    
+    if not ticker_list:
+        return jsonify({"error": "No tickers provided"}), 400
+    
+    try:
+        historical_prices = yf.download(ticker_list, period=selected_period, interval=selected_interval)
+        clean_prices = historical_prices.drop(columns=["Volume"], level=0)
+        clean_prices = clean_prices.stack(level=1)
+        clean_prices = clean_prices.reset_index()
+        clean_prices = clean_prices.rename(columns={"level_1": "Ticker"})
+        clean_prices["Date"] = clean_prices["Date"].dt.strftime('%d-%m-%Y')
+        # clean_prices
+        grouped = clean_prices.groupby("Ticker")
+        return jsonify({
+            ticker: group.to_dict(orient="records") for ticker, group in grouped
+        })
+    except Exception as e:
+        logger.error(f"Error fetching historical prices for tickers {ticker_list}: {e}")
+        return jsonify({"error": "Failed to fetch historical prices"}), 500
