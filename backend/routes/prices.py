@@ -100,3 +100,35 @@ def get_historical_prices():
     except Exception as e:
         logger.error(f"Error fetching historical prices for tickers {ticker_list}: {e}")
         return jsonify({"error": "Failed to fetch historical prices"}), 500
+    
+
+@price_blueprint.route('/search', methods=['GET'])
+def search_tickers():
+    """
+    Endpoint to search for tickers based on a query string
+    
+    query should be provided as a string in the query parameters, e.g.:
+    /api/prices/search?query=Bitcoin
+    """
+    logger.info("/api/prices/search route called")
+    
+    query = request.args.get('query', '')
+    maximum_results = request.args.get('max_results', 7, type=int)
+    
+    if not query:
+        return jsonify({"error": "No search query provided"}), 400
+    
+    try:
+        search_results = yf.Search(query=query, max_results=maximum_results).quotes
+        refined_results = []
+        for result in search_results:
+            refined_results.append({
+                "ticker": result['symbol'],
+                "displayed_name": result['shortname'],
+                "exchange": result['exchange'],
+                "asset_type": result['quoteType']
+            })
+        return jsonify(refined_results)
+    except Exception as e:
+        logger.error(f"Error searching for tickers with query '{query}': {e}")
+        return jsonify({"error": "Failed to search for tickers"}), 500
