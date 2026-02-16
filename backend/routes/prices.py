@@ -1,4 +1,5 @@
 from flask import Blueprint, jsonify, request
+from ..services.finantial_data_service import FinancialDataService
 import yfinance as yf
 import logging
 
@@ -23,9 +24,8 @@ def get_latest_prices():
         return jsonify({"error": "No tickers provided"}), 400
     
     try:
-        indexed_prices = yf.Tickers(ticker_list)
-        prices = {ticker: indexed_prices.tickers[ticker].info['regularMarketPrice'] for ticker in ticker_list}
-        return jsonify(prices)
+        logger.info(f"Fetching latest prices for tickers: {ticker_list}")
+        return FinancialDataService.get_latest_prices(ticker_list)
     except Exception as e:
         logger.error(f"Error fetching prices for tickers {ticker_list}: {e}")
         return jsonify({"error": "Failed to fetch prices"}), 500
