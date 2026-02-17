@@ -72,4 +72,26 @@ def create_watchlist():
         return jsonify({"error": "Failed to create watchlist"}), 500
     finally:
         pass
+
+@watchlist_blueprint.route('/delete/<int:watchlist_id>', methods=['DELETE'])
+def delete_watchlist(watchlist_id):
+    """
+    Endpoint to delete a watchlist by its ID.
+    Example: DELETE /api/watchlists/delete/1
+    """
+    
+    if not watchlist_id:
+        return jsonify({"error": "Missing 'watchlist id' query parameter"}), 400
+
+    try:
+        with get_db_session() as session:
+            watchlist = session.query(Watchlist).filter_by(id=watchlist_id).first()
+            if not watchlist:
+                return jsonify({"error": f"Watchlist with ID {watchlist_id} not found"}), 404
+            # wathclist_name = watchlist.name
+            session.delete(watchlist)
+            return jsonify({"message": f"Watchlist '{watchlist.name}' with ID {watchlist_id} deleted successfully", "watchlist": {"id": watchlist_id, "name": watchlist.name}}), 200
+    except Exception as e:
+        logger.error(f"Error deleting watchlist: {e}")
+        return jsonify({"error": "Failed to delete watchlist"}), 500
     
