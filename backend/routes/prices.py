@@ -81,15 +81,14 @@ def get_historical_prices():
         return jsonify({"error": "No tickers provided"}), 400
     
     try:
-        historical_prices = FinancialDataService.historical_prices(ticker_list, period=selected_period, interval=selected_interval)
-        return jsonify(historical_prices)
+        return jsonify(FinancialDataService.historical_prices(ticker_list, period=selected_period, interval=selected_interval))
     except Exception as e:
         logger.error(f"Error fetching historical prices for tickers {ticker_list}: {e}")
         return jsonify({"error": "Failed to fetch historical prices"}), 500
     
 
 @price_blueprint.route('/search', methods=['GET'])
-def search_tickers():
+def get_search_tickers():
     """
     Endpoint to search for tickers based on a query string
     
@@ -105,16 +104,7 @@ def search_tickers():
         return jsonify({"error": "No search query provided"}), 400
     
     try:
-        search_results = yf.Search(query=query, max_results=maximum_results).quotes
-        refined_results = []
-        for result in search_results:
-            refined_results.append({
-                "ticker": result['symbol'],
-                "displayed_name": result['shortname'],
-                "exchange": result['exchange'],
-                "asset_type": result['quoteType']
-            })
-        return jsonify(refined_results)
+        return jsonify(FinancialDataService.search_tickers(query, maximum_results=maximum_results))
     except Exception as e:
         logger.error(f"Error searching for tickers with query '{query}': {e}")
         return jsonify({"error": "Failed to search for tickers"}), 500

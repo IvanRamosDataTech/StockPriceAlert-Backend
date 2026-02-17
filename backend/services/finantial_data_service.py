@@ -73,3 +73,27 @@ class FinancialDataService:
         except Exception as e:
             logger.error(f"Error fetching historical prices for tickers {ticker_list}: {e}")
             raise e
+        
+    @staticmethod
+    def search_tickers(query, maximum_results=10):
+        """
+        Search for tickers based on a query string
+        
+        query - The search query string e.g. "Micron Tech"
+        
+        return - A list of dictionaries containing ticker symbol and short name
+        """
+        try:
+            search_results = yf.Search(query=query, max_results=maximum_results).quotes
+            refined_results = []
+            for result in search_results:
+                refined_results.append({
+                    "ticker": result['symbol'],
+                    "displayed_name": result['shortname'],
+                    "exchange": result['exchange'],
+                    "asset_type": result['quoteType']
+                })
+            return refined_results
+        except Exception as e:
+            logger.error(f"Error searching for tickers with query '{query}': {e}")
+            raise e
