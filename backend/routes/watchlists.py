@@ -73,6 +73,7 @@ def create_watchlist():
     finally:
         pass
 
+
 @watchlist_blueprint.route('/delete/<int:watchlist_id>', methods=['DELETE'])
 def delete_watchlist(watchlist_id):
     """
@@ -94,4 +95,35 @@ def delete_watchlist(watchlist_id):
     except Exception as e:
         logger.error(f"Error deleting watchlist: {e}")
         return jsonify({"error": "Failed to delete watchlist"}), 500
+    
+    
+@watchlist_blueprint.route('/update/<int:watchlist_id>', methods=['PATCH'])
+def update_watchlist(watchlist_id):
+    """
+    Endpoint to update a watchlist's name by its ID. Expects a 'name' query parameter.
+    Example: PATCH /api/watchlists/update/1
+
+    Raw Body: {"name": "New Watchlist Name"}
+    """
+    data = request.get_json()
+    if not data or 'name' not in data:
+        return jsonify({"error": "Missing 'name' in request body"}), 400
+    new_name = data['name']
+
+    try:
+        with get_db_session() as session:
+            watchlist = session.query(Watchlist).filter_by(id=watchlist_id).first()
+            if not watchlist:
+                return jsonify({"error": f"Watchlist with ID {watchlist_id} not found"}), 404
+            
+            # Check if another watchlist with the new name already exists
+            if watchlist.name != new_name and not Watchlist(name=new_name).name_available():
+                return jsonify({"error": f"Another watchlist with name '{new_name}' already exists"}), 409
+            
+            watchlist.name = new_name
+            session.commit()
+            return jsonify({"message": f"Watchlist with ID {watchlist_id} updated successfully", "watchlist": {"id": watchlist_id, "name": new_name}}), 200
+    except Exception as e:
+        logger.error(f"Error updating watchlist: {e}")
+        return jsonify({"error": "Failed to update watchlist"}), 500
     
