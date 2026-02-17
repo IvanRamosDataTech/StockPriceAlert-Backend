@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 class FinancialDataService:
 
     @staticmethod
-    def get_latest_prices(tickers=[]):
+    def latest_prices(tickers=[]):
         """
         Get the latest prices for a list of tickers
         
@@ -24,7 +24,7 @@ class FinancialDataService:
             raise e
         
     @staticmethod
-    def get_exchange_rate(pair="USD/MXN"):
+    def exchange_rate(pair="USD/MXN"):
         """
         Get the latest exchange rate for a currency pair
         
@@ -45,4 +45,31 @@ class FinancialDataService:
         except Exception as e:
             logger.error(f"Fetched object: {exchange_rate}")
             logger.error(f"Error fetching exchange rate for pair {pair}: {e}")
+            raise e
+        
+    @staticmethod
+    def historical_prices(ticker_list, period="1d", interval="15m"):
+        """
+        Get historical prices for a list of tickers
+        
+        tickers - List of stock ticker symbols as strings e.g. ["AAPL", "GOOGL"]
+        period - Data period to fetch (e.g. "1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "ytd", "max")
+        interval - Data interval (e.g. "1m", "2m", "5m", "15m", "30m", "60m", "90m", "1h", "1d", "5d", "1wk", "1mo")
+        
+        return - A list of dictionaries containing date and closing price
+        """
+        try:    
+            historical_prices = yf.download(ticker_list, period=period, interval=interval)
+            clean_prices = historical_prices.drop(columns=["Volume"], level=0)
+            clean_prices = clean_prices.stack(level=1)
+            clean_prices = clean_prices.reset_index()
+            clean_prices = clean_prices.rename(columns={"level_1": "Ticker"})
+            clean_prices["Date"] = clean_prices["Date"].dt.strftime('%d-%m-%Y')
+            # clean_prices
+            grouped = clean_prices.groupby("Ticker")
+            return {
+                ticker: group.to_dict(orient="records") for ticker, group in grouped
+            }
+        except Exception as e:
+            logger.error(f"Error fetching historical prices for tickers {ticker_list}: {e}")
             raise e

@@ -25,7 +25,7 @@ def get_latest_prices():
     
     try:
         logger.info(f"Fetching latest prices for tickers: {ticker_list}")
-        return jsonify(FinancialDataService.get_latest_prices(ticker_list))
+        return jsonify(FinancialDataService.latest_prices(ticker_list))
     except Exception as e:
         logger.error(f"Error fetching prices for tickers {ticker_list}: {e}")
         return jsonify({"error": "Failed to fetch prices"}), 500
@@ -46,7 +46,7 @@ def get_exchange_rate():
         return jsonify({"error": "Invalid currency pair format. Use 'BASE/QUOTE' format."}), 400
     
     try:
-        exchange_rate = FinancialDataService.get_exchange_rate(pair)
+        exchange_rate = FinancialDataService.exchange_rate(pair)
         if exchange_rate:
             return jsonify(exchange_rate)
         else:
@@ -81,17 +81,8 @@ def get_historical_prices():
         return jsonify({"error": "No tickers provided"}), 400
     
     try:
-        historical_prices = yf.download(ticker_list, period=selected_period, interval=selected_interval)
-        clean_prices = historical_prices.drop(columns=["Volume"], level=0)
-        clean_prices = clean_prices.stack(level=1)
-        clean_prices = clean_prices.reset_index()
-        clean_prices = clean_prices.rename(columns={"level_1": "Ticker"})
-        clean_prices["Date"] = clean_prices["Date"].dt.strftime('%d-%m-%Y')
-        # clean_prices
-        grouped = clean_prices.groupby("Ticker")
-        return jsonify({
-            ticker: group.to_dict(orient="records") for ticker, group in grouped
-        })
+        historical_prices = FinancialDataService.historical_prices(ticker_list, period=selected_period, interval=selected_interval)
+        return jsonify(historical_prices)
     except Exception as e:
         logger.error(f"Error fetching historical prices for tickers {ticker_list}: {e}")
         return jsonify({"error": "Failed to fetch historical prices"}), 500
