@@ -33,7 +33,7 @@ def get_db_session():
     session = db.session
     try:
         yield session
-        #session.commit()
+        session.commit()
     except Exception as e:
         session.rollback()
         print(f"✗ Database error: {e}")

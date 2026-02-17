@@ -67,15 +67,9 @@ def create_watchlist():
                 return jsonify({"message": f"Watchlist '{name}' created successfully", "watchlist": {"id": new_watchlist.id, "name": new_watchlist.name}}), 201
             else:
                 return jsonify({"error": f"Watchlist with name '{name}' already exists"}), 409
-        # session = get_db_session()
-        # session.add(new_watchlist)
-        # session.commit()
-        
     except Exception as e:
-        #session.rollback()
         logger.error(f"Error creating watchlist: {e}")
         return jsonify({"error": "Failed to create watchlist"}), 500
     finally:
-        #session.close()
         pass
     

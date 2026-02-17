@@ -6,4 +6,5 @@ __pycache__
 # Ignore environment variable files with sensitive keys and tokens
 .env
 .flaskenv
+instance/
 instance/stockalert.db
