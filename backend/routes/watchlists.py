@@ -121,7 +121,7 @@ def update_watchlist(watchlist_id):
                 return jsonify({"error": f"Another watchlist with name '{new_name}' already exists"}), 409
             
             watchlist.name = new_name
-            session.commit()
+            
             return jsonify({"message": f"Watchlist with ID {watchlist_id} updated successfully", "watchlist": {"id": watchlist_id, "name": new_name}}), 200
     except Exception as e:
         logger.error(f"Error updating watchlist: {e}")
