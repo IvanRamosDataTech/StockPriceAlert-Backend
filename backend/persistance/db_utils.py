@@ -9,8 +9,8 @@ from backend.persistance.db_manager import db
 
 def populate_database():
     # Add some assets for testing
-    apple = Asset(ticker="AAPL", price=150.00, displayed_name="Apple Inc.", price_change=1.5, price_change_percent=1.0, min_month_price=140.00)
-    amazon = Asset(ticker="AMZN", price=3305.00, displayed_name="Amazon.com Inc.", price_change=-10.0, price_change_percent=-0.3, min_month_price=3200.00)
+    apple = Asset(ticker="AAPL", price=150.00, displayed_name="Apple Inc.")
+    amazon = Asset(ticker="AMZN", price=3305.00, displayed_name="Amazon.com Inc.")
     chevron = Asset(ticker="CVX", price=98.20, displayed_name="Chevron Corporation", price_change=0.5, price_change_percent=0.5, min_month_price=95.00)
     robo = Asset(ticker="ROBO", price=123.69, displayed_name="ROBO Global Robotics and Automation Index ETF", price_change=-2.0, price_change_percent=-1.6, min_month_price=120.00)
     ihya = Asset(ticker="IHYA", price=45.67, displayed_name="iShares iBoxx $ High Yield Corporate Bond ETF", price_change=-0.2, price_change_percent=-0.4, min_month_price=44.00)
@@ -54,16 +54,25 @@ def populate_database():
     
     db.session.commit()
 
-# def update_assets():
-#     apple = Asset.query.filter_by(ticker="AAPL").first()
-#     robo = Asset.query.filter_by(ticker="ROBO").first()
-#     if apple:
-#         apple.price = 155.00
-#         db.session.commit()
+def update_asset(ticker, new_price, historical_prices=None):
+    
+    asset = Asset.query.filter_by(ticker=ticker).first()
 
-#     if robo:
-#         robo.price = 118.43
-#         db.session.commit()
+    if asset:
+        asset.previous_price = asset.price
+        asset.price = new_price
+        asset.price_change = asset.price - asset.previous_price
+        asset.price_change_percent = (asset.price_change / asset.previous_price) * 100 if asset.previous_price else 0.0
+        asset.updated_at = db.func.current_timestamp()
+        if historical_prices:
+            asset.min_month_price = historical_prices.get("min_month_price", asset.min_month_price)
+            asset.max_month_price = historical_prices.get("max_month_price", asset.max_month_price)
+            asset.avg_month_price = historical_prices.get("avg_month_price", asset.avg_month_price)
+
+
+        db.session.commit()
+    else:
+        print(f"No asset found with ticker: {ticker}")
 
 
 # def delete_asset(ticker):  
