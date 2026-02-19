@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
 from ..services.finantial_data_service import FinancialDataService
 from ..models.watchlist import Watchlist
+from ..models.asset import Asset
 from ..persistance.db_manager import get_db_session
 import logging
 
@@ -127,3 +128,49 @@ def update_watchlist(watchlist_id):
         logger.error(f"Error updating watchlist: {e}")
         return jsonify({"error": "Failed to update watchlist"}), 500
     
+
+@watchlist_blueprint.route('/<int:watchlist_id>/add-asset', methods=['POST'])
+def add_asset_to_watchlist(watchlist_id):
+    """
+    Endpoint to add an asset to a watchlist by its ID. Expects a 'ticker' query parameter.
+    Example: POST /api/watchlists/1/add-asset
+
+    Required Raw Body:   {
+                    "ticker": "COIN"
+                }
+    """
+    data = request.get_json()
+    if not data or 'ticker' not in data:
+        return jsonify({"error": "Missing 'ticker' in request body"}), 400
+    ticker = data['ticker']
+
+    try:
+        with get_db_session() as session:
+            watchlist = session.query(Watchlist).filter_by(id=watchlist_id).first()
+            
+            if not watchlist:
+                return jsonify({"error": f"Watchlist with ID {watchlist_id} not found"}), 404
+        
+            asset = session.query(Asset).filter_by(ticker=ticker).first()
+
+            if asset in watchlist.assets:
+                return jsonify({"error": f"Asset with ticker '{ticker}' is already in the watchlist"}), 409
+
+            # If the asset doesn't exist in the database, we create a new one with the provided ticker and displayed_name
+            if not asset:
+                asset_data = FinancialDataService.get_statistics(ticker, period="1mo", interval="1d")
+                asset = Asset(ticker=asset_data["ticker"], displayed_name=asset_data["displayed_name"]) 
+                asset.previous_price = asset_data["previous_price"]
+                asset.price = asset_data["current_price"]
+                asset.price_change = asset_data["price_change"]
+                asset.price_change_percent = asset_data["price_change_percent"]
+                asset.min_month_price = asset_data["min_price_in_period"]
+                asset.max_month_price = asset_data["max_price_in_period"]
+                asset.avg_month_price = asset_data["avg_price_in_period"]            
+                        
+            watchlist.assets.append(asset)
+            
+            return jsonify({"message": f"Asset with ticker '{ticker}' added to watchlist with ID {watchlist_id} successfully", "watchlist": {"id": watchlist_id, "name": watchlist.name, "assets": [{"ticker": a.ticker, "displayed_name": a.displayed_name} for a in watchlist.assets]}}), 200
+    except Exception as e:
+        logger.error(f"Error adding asset {ticker} to watchlist: {e}")
+        return jsonify({"error": f"Failed to add asset {ticker} to watchlist"}), 500

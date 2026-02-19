@@ -75,6 +75,34 @@ class FinancialDataService:
             raise e
         
     @staticmethod
+    def get_statistics(ticker, period, interval):
+        """
+        Get basic statistics of price for a ticker in a given period, which can be used for alerting rules
+        
+        ticker - Stock ticker symbol as string e.g. "LLY"
+        period - Data period to fetch (e.g. "1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "ytd", "max")
+        interval - Data interval (e.g. "1m", "2m", "5m", "15m", "30m", "60m", "90m", "1h", "1d", "5d", "1wk", "1mo")
+        
+        return - A dictionary containing min_price_in_period, max_price_in_period and avg_price_in_period
+        """
+        try:
+            ticker_data = yf.Ticker(ticker)
+            recent_history = ticker_data.history(period=period, interval=interval)
+            return { "ticker": ticker_data.ticker,
+               "displayed_name": ticker_data.info['shortName'],
+               "previous_price": ticker_data.info['open'],
+                "current_price": ticker_data.info['regularMarketPrice'],
+                "min_price_in_period": round(recent_history["Low"].min(), 2),
+                "max_price_in_period": round(recent_history["High"].max(), 2),
+                "avg_price_in_period": round(recent_history["Close"].mean(), 2),
+                "price_change": round(ticker_data.info['regularMarketPrice'] - ticker_data.info['open'], 2),
+                "price_change_percent": round((ticker_data.info['regularMarketPrice'] - ticker_data.info['open']) / ticker_data.info['open'] * 100, 3)
+              }
+        except Exception as e:
+            logger.error(f"Error fetching statistics for ticker {ticker}: {e}")
+            raise e
+        
+    @staticmethod
     def search_tickers(query, maximum_results=10):
         """
         Search for tickers based on a query string
