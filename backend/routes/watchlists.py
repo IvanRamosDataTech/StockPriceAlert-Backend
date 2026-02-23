@@ -90,8 +90,15 @@ def delete_watchlist(watchlist_id):
             watchlist = session.query(Watchlist).filter_by(id=watchlist_id).first()
             if not watchlist:
                 return jsonify({"error": f"Watchlist with ID {watchlist_id} not found"}), 404
-            # wathclist_name = watchlist.name
+            
+            for asset in watchlist.assets:
+            # If the asset is only associated with this watchlist, delete it from the database
+                if len(asset.watchlists) == 1:
+                    session.delete(asset)
+                    logger.info(f"Asset with ticker '{asset.ticker}' removed from database as it is no longer associated with any watchlist")
+            
             session.delete(watchlist)
+
             return jsonify({"message": f"Watchlist '{watchlist.name}' with ID {watchlist_id} deleted successfully", "watchlist": {"id": watchlist_id, "name": watchlist.name}}), 200
     except Exception as e:
         logger.error(f"Error deleting watchlist: {e}")
@@ -186,7 +193,7 @@ def remove_asset_from_watchlist(watchlist_id):
                     "ticker": "COIN"
                 }
     """
-    logger.info("/watchlists/id/remove-asset endpoint called")
+    
     data = request.get_json()
     if not data or 'ticker' not in data:
         return jsonify({"error": "Missing 'ticker' in request body"}), 400
@@ -204,12 +211,12 @@ def remove_asset_from_watchlist(watchlist_id):
             if asset not in watchlist.assets:
                 return jsonify({"error": f"Asset with ticker '{ticker}' is not in the watchlist"}), 404
 
-            watchlist.assets.remove(asset)
-
-            # Asset will only be deleted if it's not associated with any other watchlist and has no alerts, to prevent accidental data loss
-            if len(asset.watchlists) == 0:
+            # If the asset is only associated with this watchlist, delete it from the database
+            if len(asset.watchlists) == 1:
                 session.delete(asset)
-                logger.info(f"Asset with ticker '{ticker}' removed from database as it is no longer associated with any watchlist")
+
+            watchlist.assets.remove(asset)
+            
 
             return jsonify({"message": f"Asset with ticker '{ticker}' removed from watchlist with ID {watchlist_id} successfully", "watchlist": {"id": watchlist_id, "name": watchlist.name, "assets": [{"ticker": a.ticker, "displayed_name": a.displayed_name} for a in watchlist.assets]}}), 200
     except Exception as e:

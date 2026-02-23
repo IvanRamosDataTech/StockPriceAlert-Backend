@@ -42,6 +42,10 @@ def populate_database():
         hot_strategy.assets.append(amazon)
     if chevron:
         hot_strategy.assets.append(chevron)
+    if microstrategy:
+        hot_strategy.assets.append(microstrategy)
+    if trade_desk:
+        hot_strategy.assets.append(trade_desk)
     
     long_strategy = Watchlist(name="Long term holds")
     ihya = Asset.query.filter_by(ticker="IHYA").first()
@@ -50,10 +54,13 @@ def populate_database():
         long_strategy.assets.append(robo)
     if ihya:
         long_strategy.assets.append(ihya)
-    
+
+    alternatives = Watchlist(name="Alternatives")
+    alternatives.assets.append(microstrategy)
 
     db.session.add(hot_strategy)
     db.session.add(long_strategy)
+    db.session.add(alternatives)
     
     db.session.commit()
 
