@@ -174,3 +174,44 @@ def add_asset_to_watchlist(watchlist_id):
     except Exception as e:
         logger.error(f"Error adding asset {ticker} to watchlist: {e}")
         return jsonify({"error": f"Failed to add asset {ticker} to watchlist"}), 500
+    
+
+@watchlist_blueprint.route('/<int:watchlist_id>/remove-asset', methods=['DELETE'])
+def remove_asset_from_watchlist(watchlist_id):
+    """
+    Endpoint to remove an asset from a watchlist by its ID. Expects a 'ticker' query parameter.
+    Example: DELETE /api/watchlists/1/remove-asset
+
+    Required Raw Body:   {
+                    "ticker": "COIN"
+                }
+    """
+    logger.info("/watchlists/id/remove-asset endpoint called")
+    data = request.get_json()
+    if not data or 'ticker' not in data:
+        return jsonify({"error": "Missing 'ticker' in request body"}), 400
+    ticker = data['ticker']
+
+    try:
+        with get_db_session() as session:
+            watchlist = session.query(Watchlist).filter_by(id=watchlist_id).first()
+            
+            if not watchlist:
+                return jsonify({"error": f"Watchlist with ID {watchlist_id} not found"}), 404
+        
+            asset = session.query(Asset).filter_by(ticker=ticker).first()
+
+            if asset not in watchlist.assets:
+                return jsonify({"error": f"Asset with ticker '{ticker}' is not in the watchlist"}), 404
+
+            watchlist.assets.remove(asset)
+
+            # Asset will only be deleted if it's not associated with any other watchlist and has no alerts, to prevent accidental data loss
+            if len(asset.watchlists) == 0:
+                session.delete(asset)
+                logger.info(f"Asset with ticker '{ticker}' removed from database as it is no longer associated with any watchlist")
+
+            return jsonify({"message": f"Asset with ticker '{ticker}' removed from watchlist with ID {watchlist_id} successfully", "watchlist": {"id": watchlist_id, "name": watchlist.name, "assets": [{"ticker": a.ticker, "displayed_name": a.displayed_name} for a in watchlist.assets]}}), 200
+    except Exception as e:
+        logger.error(f"Error removing asset {ticker} from watchlist: {e}")
+        return jsonify({"error": f"Failed to remove asset {ticker} from watchlist"}), 500

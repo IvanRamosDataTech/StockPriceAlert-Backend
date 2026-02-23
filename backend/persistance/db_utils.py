@@ -14,6 +14,8 @@ def populate_database():
     chevron = Asset(ticker="CVX", price=98.20, displayed_name="Chevron Corporation", price_change=0.5, price_change_percent=0.5, min_month_price=95.00)
     robo = Asset(ticker="ROBO", price=123.69, displayed_name="ROBO Global Robotics and Automation Index ETF", price_change=-2.0, price_change_percent=-1.6, min_month_price=120.00)
     ihya = Asset(ticker="IHYA", price=45.67, displayed_name="iShares iBoxx $ High Yield Corporate Bond ETF", price_change=-0.2, price_change_percent=-0.4, min_month_price=44.00)
+    trade_desk = Asset(ticker="TTD", price=85.00, displayed_name="The Trade Desk Inc.", price_change=1.0, price_change_percent=1.2, min_month_price=80.00)
+    microstrategy = Asset(ticker="MSTR", price=250.00, displayed_name="MicroStrategy Incorporated", price_change=-5.0, price_change_percent=-2.0, min_month_price=240.00)
 
     # Add some alerts for testing
     apple_alert = Alert(ticker="AAPL", price_threshold=129.00, alert_type="fall below")
@@ -23,9 +25,10 @@ def populate_database():
     robo_alert = Alert(ticker="ROBO", price_threshold=None, alert_type="month low")
     robo_alert_2 = Alert(ticker="ROBO", price_threshold=115.00, alert_type="fall below")
     robo_alert_3 = Alert(ticker="ROBO", price_threshold=90.00, alert_type="fall below")
-    
-    db.session.add_all([apple, amazon, chevron, robo, ihya])
-    db.session.add_all([apple_alert, chevron_alert, chevron_alert2, ihya_alert, robo_alert, robo_alert_2, robo_alert_3])
+    mstr_alert = Alert(ticker="MSTR", price_threshold=None, alert_type="month low")
+
+    db.session.add_all([apple, amazon, chevron, robo, ihya, trade_desk, microstrategy])
+    db.session.add_all([apple_alert, chevron_alert, chevron_alert2, ihya_alert, robo_alert, robo_alert_2, robo_alert_3, mstr_alert])
 
     # Add some watchlists for testing
     hot_strategy = Watchlist(name="Hot stocks")
