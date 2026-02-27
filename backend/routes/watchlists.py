@@ -36,7 +36,7 @@ def get_watchlists():
             watchlists_data.append({
                 "id": watchlist.id,
                 "name": watchlist.name,
-                "assets": [{"ticker": asset.ticker, "displayed_name": asset.displayed_name} for asset in watchlist.assets]
+                "assets": [{"ticker": asset.ticker, "displayed_name": asset.displayed_name, "previous_price": asset.previous_price, "price": asset.price, "change %": asset.price_change_percent } for asset in watchlist.assets]
             })
         return jsonify({"watchlists": watchlists_data}), 200
     except Exception as e:
@@ -217,8 +217,34 @@ def remove_asset_from_watchlist(watchlist_id):
 
             watchlist.assets.remove(asset)
             
-
             return jsonify({"message": f"Asset with ticker '{ticker}' removed from watchlist with ID {watchlist_id} successfully", "watchlist": {"id": watchlist_id, "name": watchlist.name, "assets": [{"ticker": a.ticker, "displayed_name": a.displayed_name} for a in watchlist.assets]}}), 200
     except Exception as e:
         logger.error(f"Error removing asset {ticker} from watchlist: {e}")
         return jsonify({"error": f"Failed to remove asset {ticker} from watchlist"}), 500
+    
+
+@watchlist_blueprint.route('/<int:watchlist_id>/refresh-prices', methods=['GET']) 
+def refresh_watchlist_prices(watchlist_id):
+    """
+        Endpoint to refresh the prices of all assets in a watchlist by its ID. 
+        Mainly used for manual refreshing of the watchlist prices, but also called by the background scheduler to keep the prices updated.
+    """
+    try:
+        with get_db_session() as session:
+            watchlist = session.query(Watchlist).filter_by(id=watchlist_id).first()
+            
+            if not watchlist:
+                return jsonify({"error": f"Watchlist with ID {watchlist_id} not found"}), 404
+        
+            ticker_list = [asset.ticker for asset in watchlist.assets]
+            prices = FinancialDataService.latest_prices(ticker_list)
+            for asset in watchlist.assets:
+                asset.previous_price = asset.price
+                asset.price = prices.get(asset.ticker, asset.price)  # If price is not found, keep the old price
+                asset.price_change = asset.price - asset.previous_price
+                asset.price_change_percent = (asset.price_change / asset.previous_price) * 100 if asset.previous_price else 0.0
+            
+            return jsonify({"message": f"watchlist {watchlist.name} refreshed successfully", "watchlist": {"id": watchlist_id, "name": watchlist.name, "assets": [{"ticker": a.ticker, "displayed_name": a.displayed_name, "previous_price": a.previous_price, "price": a.price, "change %": a.price_change_percent} for a in watchlist.assets]}}), 200
+    except Exception as e:
+        logger.error(f"Error refreshing prices for watchlist with ID {watchlist_id}: {e}")
+        return jsonify({"error": f"Failed to refresh prices for watchlist with ID {watchlist_id}"}), 500

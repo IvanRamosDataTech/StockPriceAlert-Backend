@@ -13,7 +13,7 @@ def populate_database():
     amazon = Asset(ticker="AMZN", price=3305.00, displayed_name="Amazon.com Inc.")
     chevron = Asset(ticker="CVX", price=98.20, displayed_name="Chevron Corporation", price_change=0.5, price_change_percent=0.5, min_month_price=95.00)
     robo = Asset(ticker="ROBO", price=123.69, displayed_name="ROBO Global Robotics and Automation Index ETF", price_change=-2.0, price_change_percent=-1.6, min_month_price=120.00)
-    ihya = Asset(ticker="IHYA", price=45.67, displayed_name="iShares iBoxx $ High Yield Corporate Bond ETF", price_change=-0.2, price_change_percent=-0.4, min_month_price=44.00)
+    ihya = Asset(ticker="IHYA.L", price=45.67, displayed_name="iShares iBoxx $ High Yield Corporate Bond ETF", price_change=-0.2, price_change_percent=-0.4, min_month_price=44.00)
     trade_desk = Asset(ticker="TTD", price=85.00, displayed_name="The Trade Desk Inc.", price_change=1.0, price_change_percent=1.2, min_month_price=80.00)
     microstrategy = Asset(ticker="MSTR", price=250.00, displayed_name="MicroStrategy Incorporated", price_change=-5.0, price_change_percent=-2.0, min_month_price=240.00)
 
@@ -21,7 +21,7 @@ def populate_database():
     apple_alert = Alert(ticker="AAPL", price_threshold=129.00, alert_type="fall below")
     chevron_alert = Alert(ticker="CVX", price_threshold=175.00, alert_type="rise above")
     chevron_alert2 = Alert(ticker="CVX", price_threshold=200.00, alert_type="rise above")
-    ihya_alert = Alert(ticker="IHYA", price_threshold=44.9, alert_type="fall below")
+    ihya_alert = Alert(ticker="IHYA.L", price_threshold=44.9, alert_type="fall below")
     robo_alert = Alert(ticker="ROBO", price_threshold=None, alert_type="month low")
     robo_alert_2 = Alert(ticker="ROBO", price_threshold=115.00, alert_type="fall below")
     robo_alert_3 = Alert(ticker="ROBO", price_threshold=90.00, alert_type="fall below")
@@ -48,7 +48,7 @@ def populate_database():
         hot_strategy.assets.append(trade_desk)
     
     long_strategy = Watchlist(name="Long term holds")
-    ihya = Asset.query.filter_by(ticker="IHYA").first()
+    ihya = Asset.query.filter_by(ticker="IHYA.L").first()
     robo = Asset.query.filter_by(ticker="ROBO").first()
     if robo:
         long_strategy.assets.append(robo)
@@ -85,17 +85,17 @@ def update_asset(ticker, new_price, historical_prices=None):
         print(f"No asset found with ticker: {ticker}")
 
 
-# def delete_asset(ticker):  
-#     asset = Asset.query.filter_by(ticker=ticker).first()
-#     if asset:
-#         db.session.delete(asset)
-#         db.session.commit()
-#     else:
-#         print(f"No asset found with ticker: {ticker}")
+def delete_asset(ticker):  
+    asset = Asset.query.filter_by(ticker=ticker).first()
+    if asset:
+        db.session.delete(asset)
+        db.session.commit()
+    else:
+        print(f"No asset found with ticker: {ticker}")
 
-# def delete_all_assets():
-#     Asset.query.all().delete()
-#     db.session.commit()
+def delete_all_assets():
+    Asset.query.all().delete()
+    db.session.commit()
 
 def clean_database():
     db.session.query(Watchlist).delete()
