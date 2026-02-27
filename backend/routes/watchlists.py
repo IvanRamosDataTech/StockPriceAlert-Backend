@@ -165,7 +165,7 @@ def add_asset_to_watchlist(watchlist_id):
 
             # If the asset doesn't exist in the database, we create a new one with the provided ticker and displayed_name
             if not asset:
-                asset_data = FinancialDataService.get_statistics(ticker, period="1mo", interval="1d")
+                asset_data = FinancialDataService.get_ticker_statistics(ticker, period="1mo", interval="1d")
                 asset = Asset(ticker=asset_data["ticker"], displayed_name=asset_data["displayed_name"]) 
                 asset.previous_price = asset_data["previous_price"]
                 asset.price = asset_data["current_price"]
@@ -239,10 +239,7 @@ def refresh_watchlist_prices(watchlist_id):
             ticker_list = [asset.ticker for asset in watchlist.assets]
             prices = FinancialDataService.latest_prices(ticker_list)
             for asset in watchlist.assets:
-                asset.previous_price = asset.price
-                asset.price = prices.get(asset.ticker, asset.price)  # If price is not found, keep the old price
-                asset.price_change = asset.price - asset.previous_price
-                asset.price_change_percent = (asset.price_change / asset.previous_price) * 100 if asset.previous_price else 0.0
+                asset.update_price_statistics(prices.get(asset.ticker, asset.price))  # If price is not found, keep the old price
             
             return jsonify({"message": f"watchlist {watchlist.name} refreshed successfully", "watchlist": {"id": watchlist_id, "name": watchlist.name, "assets": [{"ticker": a.ticker, "displayed_name": a.displayed_name, "previous_price": a.previous_price, "price": a.price, "change %": a.price_change_percent} for a in watchlist.assets]}}), 200
     except Exception as e:

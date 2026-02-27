@@ -9,13 +9,13 @@ from backend.persistance.db_manager import db
 
 def populate_database():
     # Add some assets for testing
-    apple = Asset(ticker="AAPL", price=150.00, displayed_name="Apple Inc.")
-    amazon = Asset(ticker="AMZN", price=3305.00, displayed_name="Amazon.com Inc.")
-    chevron = Asset(ticker="CVX", price=98.20, displayed_name="Chevron Corporation", price_change=0.5, price_change_percent=0.5, min_month_price=95.00)
-    robo = Asset(ticker="ROBO", price=123.69, displayed_name="ROBO Global Robotics and Automation Index ETF", price_change=-2.0, price_change_percent=-1.6, min_month_price=120.00)
-    ihya = Asset(ticker="IHYA.L", price=45.67, displayed_name="iShares iBoxx $ High Yield Corporate Bond ETF", price_change=-0.2, price_change_percent=-0.4, min_month_price=44.00)
-    trade_desk = Asset(ticker="TTD", price=85.00, displayed_name="The Trade Desk Inc.", price_change=1.0, price_change_percent=1.2, min_month_price=80.00)
-    microstrategy = Asset(ticker="MSTR", price=250.00, displayed_name="MicroStrategy Incorporated", price_change=-5.0, price_change_percent=-2.0, min_month_price=240.00)
+    apple = Asset(ticker="AAPL", price=150.00, previous_price=150.00, displayed_name="Apple Inc.")
+    amazon = Asset(ticker="AMZN", price=3305.00, previous_price=3305.00, displayed_name="Amazon.com Inc.")
+    chevron = Asset(ticker="CVX", price=98.20, previous_price=98.20, displayed_name="Chevron Corporation", price_change=0.5, price_change_percent=0.5, min_month_price=95.00)
+    robo = Asset(ticker="ROBO", price=123.69, previous_price=123.69, displayed_name="ROBO Global Robotics and Automation Index ETF", price_change=-2.0, price_change_percent=-1.6, min_month_price=120.00)
+    ihya = Asset(ticker="IHYA.L", price=45.67, previous_price=45.67, displayed_name="iShares iBoxx $ High Yield Corporate Bond ETF", price_change=-0.2, price_change_percent=-0.4, min_month_price=44.00)
+    trade_desk = Asset(ticker="TTD", price=85.00, previous_price=85.00, displayed_name="The Trade Desk Inc.", price_change=1.0, price_change_percent=1.2, min_month_price=80.00)
+    microstrategy = Asset(ticker="MSTR", price=250.00, previous_price=250.00, displayed_name="MicroStrategy Incorporated", price_change=-5.0, price_change_percent=-2.0, min_month_price=240.00)
 
     # Add some alerts for testing
     apple_alert = Alert(ticker="AAPL", price_threshold=129.00, alert_type="fall below")

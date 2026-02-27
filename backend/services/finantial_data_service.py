@@ -48,7 +48,7 @@ class FinancialDataService:
             raise e
         
     @staticmethod
-    def historical_prices(ticker_list, period="1d", interval="15m"):
+    def historical_tickers_prices(ticker_list, period="1d", interval="15m"):
         """
         Get historical prices for a list of tickers
         
@@ -75,7 +75,7 @@ class FinancialDataService:
             raise e
         
     @staticmethod
-    def get_statistics(ticker, period, interval):
+    def get_ticker_statistics(ticker, period, interval):
         """
         Get basic statistics of price for a ticker in a given period, which can be used for alerting rules
         
