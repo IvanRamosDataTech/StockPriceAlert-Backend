@@ -9,6 +9,10 @@ class Watchlist(db.Model):
     name = db.Column(db.String(50), nullable=False, unique=True)
     assets = db.relationship('Asset', secondary=watchlist_asset, back_populates='watchlists')
 
+    def name_available(self):
+        existing_watchlist = Watchlist.query.filter_by(name=self.name).first()
+        return existing_watchlist is None
+
     def __str__(self):
         info = f"<Watchlist {self.name}>"
         info += "Assets: \n"
