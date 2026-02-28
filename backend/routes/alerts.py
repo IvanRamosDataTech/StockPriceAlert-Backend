@@ -81,3 +81,23 @@ def set_alert():
     except Exception as e:
         logger.error(f"Error creating alert: {e}")
         return jsonify({"error": "Failed to create alert"}), 500
+    
+
+@alerts_blueprint.route('/<int:alert_id>', methods=['DELETE'])
+def unset_alert(alert_id):
+    """
+    Endpoint to delete an alert by its ID
+    """
+    logger.info(f"/api/alerts/{alert_id} DELETE route called")
+    
+    try:
+        with get_db_session() as session:
+            alert = Alert.query.get(alert_id)
+            if not alert:
+                return jsonify({"error": f"No alert found with ID {alert_id}"}), 404
+    
+            session.delete(alert)
+            return jsonify({"message": f"Alert {alert.alert_type} for asset {alert.asset.ticker} successfully deleted"})
+    except Exception as e:
+        logger.error(f"Error deleting alert: {e}")
+        return jsonify({"error": "Failed to delete alert"}), 500
