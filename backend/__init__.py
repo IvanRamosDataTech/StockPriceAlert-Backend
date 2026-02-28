@@ -3,6 +3,7 @@ from backend.persistance.db_manager import db, init_db
 from backend.routes.general import general_blueprint
 from backend.routes.prices import price_blueprint
 from backend.routes.watchlists import watchlist_blueprint
+from backend.routes.alerts import alerts_blueprint
 import logging
 
 print("Loading backend package ...")
@@ -19,6 +20,7 @@ def create_app():
     flask_app.register_blueprint(general_blueprint)
     flask_app.register_blueprint(price_blueprint)
     flask_app.register_blueprint(watchlist_blueprint)
+    flask_app.register_blueprint(alerts_blueprint)
     
     return flask_app
     
