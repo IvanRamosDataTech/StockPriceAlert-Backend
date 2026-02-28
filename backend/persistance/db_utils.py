@@ -18,14 +18,14 @@ def populate_database():
     microstrategy = Asset(ticker="MSTR", price=250.00, previous_price=250.00, displayed_name="MicroStrategy Incorporated", price_change=-5.0, price_change_percent=-2.0, min_month_price=240.00)
 
     # Add some alerts for testing
-    apple_alert = Alert(ticker="AAPL", price_threshold=129.00, alert_type="fall below")
-    chevron_alert = Alert(ticker="CVX", price_threshold=175.00, alert_type="rise above")
-    chevron_alert2 = Alert(ticker="CVX", price_threshold=200.00, alert_type="rise above")
-    ihya_alert = Alert(ticker="IHYA.L", price_threshold=44.9, alert_type="fall below")
-    robo_alert = Alert(ticker="ROBO", price_threshold=None, alert_type="month low")
-    robo_alert_2 = Alert(ticker="ROBO", price_threshold=115.00, alert_type="fall below")
-    robo_alert_3 = Alert(ticker="ROBO", price_threshold=90.00, alert_type="fall below")
-    mstr_alert = Alert(ticker="MSTR", price_threshold=None, alert_type="month low")
+    apple_alert = Alert(ticker="AAPL", price_threshold=129.00, alert_type="PriceBelow")
+    chevron_alert = Alert(ticker="CVX", price_threshold=175.00, alert_type="PriceAbove")
+    chevron_alert2 = Alert(ticker="CVX", price_threshold=200.00, alert_type="PriceAbove")
+    ihya_alert = Alert(ticker="IHYA.L", price_threshold=44.9, alert_type="PriceBelow")
+    robo_alert = Alert(ticker="ROBO", price_threshold=None, alert_type="MonthMinimum")
+    robo_alert_2 = Alert(ticker="ROBO", price_threshold=115.00, alert_type="PriceBelow")
+    robo_alert_3 = Alert(ticker="ROBO", price_threshold=90.00, alert_type="PriceBelow")
+    mstr_alert = Alert(ticker="MSTR", price_threshold=None, alert_type="MonthMinimum")
 
     db.session.add_all([apple, amazon, chevron, robo, ihya, trade_desk, microstrategy])
     db.session.add_all([apple_alert, chevron_alert, chevron_alert2, ihya_alert, robo_alert, robo_alert_2, robo_alert_3, mstr_alert])
