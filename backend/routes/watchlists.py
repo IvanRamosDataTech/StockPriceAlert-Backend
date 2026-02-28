@@ -33,10 +33,21 @@ def get_watchlists():
         watchlists = Watchlist.query.all()
         watchlists_data = []
         for watchlist in watchlists:
+            assets_in_watchlist = []
+            for asset in watchlist.assets:
+                assets_in_watchlist.append({
+                    "ticker": asset.ticker,
+                    "displayed_name": asset.displayed_name,
+                    "previous_price": asset.previous_price,
+                    "price": asset.price,
+                    "change %": asset.price_change_percent,
+                    "alerts": [{"id": alert.id, "type": alert.alert_type, "threshold": alert.price_threshold} for alert in asset.alerts]
+                })
+
             watchlists_data.append({
                 "id": watchlist.id,
                 "name": watchlist.name,
-                "assets": [{"ticker": asset.ticker, "displayed_name": asset.displayed_name, "previous_price": asset.previous_price, "price": asset.price, "change %": asset.price_change_percent } for asset in watchlist.assets]
+                "assets": assets_in_watchlist
             })
         return jsonify({"watchlists": watchlists_data}), 200
     except Exception as e:
