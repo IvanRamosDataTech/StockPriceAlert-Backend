@@ -4,6 +4,7 @@ from backend.routes.general import general_blueprint
 from backend.routes.prices import price_blueprint
 from backend.routes.watchlists import watchlist_blueprint
 from backend.routes.alerts import alerts_blueprint
+from backend.scheduler.scheduler import start_scheduler
 import logging
 
 print("Loading backend package ...")
@@ -21,6 +22,8 @@ def create_app():
     flask_app.register_blueprint(price_blueprint)
     flask_app.register_blueprint(watchlist_blueprint)
     flask_app.register_blueprint(alerts_blueprint)
+
+    start_scheduler(flask_app)
     
     return flask_app
     
