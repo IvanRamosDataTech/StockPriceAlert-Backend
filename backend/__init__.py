@@ -23,7 +23,10 @@ def create_app():
     flask_app.register_blueprint(watchlist_blueprint)
     flask_app.register_blueprint(alerts_blueprint)
 
-    start_scheduler(flask_app)
+    try:
+        start_scheduler(flask_app)
+    except (KeyboardInterrupt, SystemExit, Exception) as exception: 
+        logging.error(f"Scheduler shut down: {exception}")
     
     return flask_app
     

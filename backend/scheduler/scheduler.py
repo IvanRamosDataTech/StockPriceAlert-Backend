@@ -18,14 +18,14 @@ def simulate_fecthing_prices(interval):
     """
     Simulate fetching prices for testing purposes.
     """
-    logger.info("Simulating price fetch... Interval: %s seconds, Current time: %s", interval, datetime.now())
+    logger.info("Simulating price fetch... Interval - %s seconds - %s", interval, datetime.now())
 
 
 def simulate_fecthing_history(interval):
     """
     Simulate fetching historical data for testing purposes.
     """
-    logger.info("Simulating historical data fetch... Interval: %s seconds, Current time: %s", interval, datetime.now())
+    logger.info("Simulating historical data fetch... Interval: %s seconds -  %s", interval, datetime.now())
 
 
 def start_scheduler(app):
@@ -52,7 +52,7 @@ def start_scheduler(app):
         trigger="interval",
         # minutes=last_prices_minutes,
         seconds=last_prices_minutes,  # Use seconds for testing
-        args=[app],
+        args=[last_prices_minutes],
         id="last_prices_fetch",
         replace_existing=True,
     )
@@ -62,7 +62,7 @@ def start_scheduler(app):
         trigger="interval",
         # minutes=history_minutes,
         seconds=history_minutes,  # Use seconds for testing
-        args=[app],
+        args=[history_minutes],
         id="historical_fetch",
         replace_existing=True,
     )
