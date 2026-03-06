@@ -37,35 +37,35 @@ def start_scheduler(app):
     
     ### Test orchestration queue - uncomment for testing experimenta job executions
 
-    # scheduler.add_job(
-    #     func=send_test_telegram_message,
-    #     trigger='interval',
-    #     seconds=21,
-    #     args=[app, "Automatic message from scheduler job - testing Telegram bot communication"],
-    #     replace_existing=True,
-    #     id="experimental_telegram_message_job"
-    # )
+    scheduler.add_job(
+        func=send_test_telegram_message,
+        trigger='interval',
+        seconds=10,
+        args=[app, "Automatic message from experimental scheduler job - testing Telegram bot communication"],
+        replace_existing=True,
+        id="experimental_telegram_message_job"
+    )
 
-    scheduler.add_job(
-        # func=update_prices_and_alerts,
-        func=simulate_fecthing_prices,
-        trigger="interval",
-        # minutes=last_prices_minutes,
-        seconds=last_prices_minutes,  # Use seconds for testing
-        args=[last_prices_minutes],
-        id="last_prices_fetch",
-        replace_existing=True,
-    )
-    scheduler.add_job(
-        # func=fetch_daily_history,
-        func=simulate_fecthing_history,
-        trigger="interval",
-        # minutes=history_minutes,
-        seconds=history_minutes,  # Use seconds for testing
-        args=[history_minutes],
-        id="historical_fetch",
-        replace_existing=True,
-    )
+    # scheduler.add_job(
+    #     # func=update_prices_and_alerts,
+    #     func=simulate_fecthing_prices,
+    #     trigger="interval",
+    #     # minutes=last_prices_minutes,
+    #     seconds=last_prices_minutes,  # Use seconds for testing
+    #     args=[last_prices_minutes],
+    #     id="last_prices_fetch",
+    #     replace_existing=True,
+    # )
+    # scheduler.add_job(
+    #     # func=fetch_daily_history,
+    #     func=simulate_fecthing_history,
+    #     trigger="interval",
+    #     # minutes=history_minutes,
+    #     seconds=history_minutes,  # Use seconds for testing
+    #     args=[history_minutes],
+    #     id="historical_fetch",
+    #     replace_existing=True,
+    # )
 
 
     ### Development orchestrationt queue - uncomment for real data fetching
