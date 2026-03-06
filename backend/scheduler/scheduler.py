@@ -11,6 +11,7 @@ from .history_fetcher_job import fetch_daily_history
 from .experimental.telegram_messages_job import send_test_telegram_message
 from .experimental.simulated_price_updater_job import simulate_fecthing_prices
 from .experimental.simulated_history_fetcher_job import simulate_fecthing_history
+from .experimental.forced_alert_job import updated_price_send_alert
 
 logger = logging.getLogger(__name__)
 
@@ -38,13 +39,22 @@ def start_scheduler(app):
     ### Test orchestration queue - uncomment for testing experimenta job executions
 
     scheduler.add_job(
-        func=send_test_telegram_message,
+        func=updated_price_send_alert,
         trigger='interval',
-        seconds=10,
-        args=[app, "Automatic message from experimental scheduler job - testing Telegram bot communication"],
+        seconds=120,  # Use seconds for testing
+        args=[app],
         replace_existing=True,
-        id="experimental_telegram_message_job"
+        id="experimental_telegram_price_alert_job"
     )
+
+    # scheduler.add_job(
+    #     func=send_test_telegram_message,
+    #     trigger='interval',
+    #     seconds=10,
+    #     args=[app, "Automatic message from experimentalscheduler job - testing Telegram bot communication"],
+    #     replace_existing=True,
+    #     id="experimental_telegram_message_job"
+    # )
 
     # scheduler.add_job(
     #     # func=update_prices_and_alerts,

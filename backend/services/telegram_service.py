@@ -13,8 +13,6 @@ class TelegramService:
             bot_token = app.config.get("TELEGRAM_BOT_TOKEN")
             chat_id = app.config.get("TELEGRAM_CHAT_ID")
 
-            logger.info(f"telegram token: {bot_token}, chat_id: {chat_id}")
-
             if not bot_token or not chat_id:
                 logger.error("Telegram bot token or chat ID not configured")
                 return False
