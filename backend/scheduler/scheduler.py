@@ -6,27 +6,15 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 from datetime import datetime
 import time
-from .price_updater import update_prices_and_alerts
-from .history_fetcher import fetch_daily_history
+from .price_updater_job import update_prices_and_alerts
+from .history_fetcher_job import fetch_daily_history
+from .experimental.telegram_messages_job import send_test_telegram_message
+from .experimental.simulated_price_updater_job import simulate_fecthing_prices
+from .experimental.simulated_history_fetcher_job import simulate_fecthing_history
 
 logger = logging.getLogger(__name__)
 
 _scheduler = None
-
-
-def simulate_fecthing_prices(interval):
-    """
-    Simulate fetching prices for testing purposes.
-    """
-    logger.info("Simulating price fetch... Interval - %s seconds - %s", interval, datetime.now())
-
-
-def simulate_fecthing_history(interval):
-    """
-    Simulate fetching historical data for testing purposes.
-    """
-    logger.info("Simulating historical data fetch... Interval: %s seconds -  %s", interval, datetime.now())
-
 
 def start_scheduler(app):
     """
@@ -46,6 +34,18 @@ def start_scheduler(app):
     history_minutes = int(app.config.get("HISTORICAL_FETCH_INTERVAL", 1440))
 
     scheduler = BackgroundScheduler()
+    
+    ### Test orchestration queue - uncomment for testing experimenta job executions
+
+    # scheduler.add_job(
+    #     func=send_test_telegram_message,
+    #     trigger='interval',
+    #     seconds=21,
+    #     args=[app, "Automatic message from scheduler job - testing Telegram bot communication"],
+    #     replace_existing=True,
+    #     id="experimental_telegram_message_job"
+    # )
+
     scheduler.add_job(
         # func=update_prices_and_alerts,
         func=simulate_fecthing_prices,
@@ -66,6 +66,26 @@ def start_scheduler(app):
         id="historical_fetch",
         replace_existing=True,
     )
+
+
+    ### Development orchestrationt queue - uncomment for real data fetching
+    
+    # scheduler.add_job(
+    #     func=update_prices_and_alerts,
+    #     trigger="interval",
+    #     minutes=last_prices_minutes,
+    #     args=[app],
+    #     id="last_prices_fetch",
+    #     replace_existing=True,
+    # )
+    # scheduler.add_job(
+    #     func=fetch_daily_history,
+    #     trigger="interval",
+    #     minutes=history_minutes,
+    #     args=[app],
+    #     id="historical_fetch",
+    #     replace_existing=True,
+    # )
 
     scheduler.start()
     _scheduler = scheduler

@@ -13,7 +13,10 @@ def create_app():
     flask_app = Flask(__name__)
     # Change to logging.DEBUG for more verbose output during development
     logging.basicConfig(level=logging.INFO)
-    flask_app.config.from_prefixed_env() # Load configuration from environment variables with "FLASK_" prefix
+    if flask_app.config.from_prefixed_env(): # Load configuration from environment variables with "FLASK_" prefix
+        logging.info("Configuration loaded from environment variables")
+    else:
+        logging.warning("Cound not load environment variables with 'FLASK_' prefix")
 
     init_db(flask_app) # Initialize database with Flask app context
 
