@@ -1,5 +1,6 @@
 from ..models.alert import Alert, ALERT_TYPE_MONTH_LOW, ALERT_TYPE_PRICE_BELOW, ALERT_TYPE_PRICE_ABOVE
 from ..persistance.db_manager import get_db_session
+from .telegram_service import TelegramService
 import logging
 
 logger = logging.getLogger(__name__)
@@ -16,7 +17,7 @@ class AlertService:
     """
 
     @staticmethod
-    def check_alert(alert):
+    def check_alert(app, alert):
 
         """
         Check if a specific alert condition is met and log the result.
@@ -24,12 +25,9 @@ class AlertService:
         """
 
         def trigger_alert(alert, message):
-            with get_db_session() as session:
-                alert.update_trigger_time()
-                session.commit()
-            
+            alert.update_trigger_time()
             logger.info(message)
-                # Here you would add code to send a notification to the user
+            TelegramService.send_message(app, message)
 
         def month_minimum(alert):
             asset = alert.asset
@@ -55,7 +53,7 @@ class AlertService:
 
     
     @staticmethod
-    def check_all_alerts():
+    def check_all_alerts(app):
         alerts = Alert.query.all()
         for alert in alerts:
-            AlertService.check_alert(alert)
+            AlertService.check_alert(app, alert)

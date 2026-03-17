@@ -39,13 +39,22 @@ def start_scheduler(app):
     ### Test orchestration queue - uncomment for testing experimenta job executions
 
     scheduler.add_job(
-        func=updated_price_send_alert,
-        trigger='interval',
-        seconds=120,  # Use seconds for testing
+        func=update_prices_and_alerts,
+        trigger="interval",
+        seconds=30,  # Use seconds for testing
         args=[app],
+        id="last_prices_fetch",
         replace_existing=True,
-        id="experimental_telegram_price_alert_job"
     )
+
+    # scheduler.add_job(
+    #     func=updated_price_send_alert,
+    #     trigger='interval',
+    #     seconds=120,  # Use seconds for testing
+    #     args=[app],
+    #     replace_existing=True,
+    #     id="experimental_telegram_price_alert_job"
+    # )
 
     # scheduler.add_job(
     #     func=send_test_telegram_message,
@@ -88,6 +97,7 @@ def start_scheduler(app):
     #     id="last_prices_fetch",
     #     replace_existing=True,
     # )
+
     # scheduler.add_job(
     #     func=fetch_daily_history,
     #     trigger="interval",
