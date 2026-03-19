@@ -4,6 +4,7 @@ from backend.routes.general import general_blueprint
 from backend.routes.prices import price_blueprint
 from backend.routes.watchlists import watchlist_blueprint
 from backend.routes.alerts import alerts_blueprint
+from backend.scheduler.scheduler import start_scheduler
 import logging
 
 print("Loading backend package ...")
@@ -12,7 +13,10 @@ def create_app():
     flask_app = Flask(__name__)
     # Change to logging.DEBUG for more verbose output during development
     logging.basicConfig(level=logging.INFO)
-    flask_app.config.from_prefixed_env() # Load configuration from environment variables with "FLASK_" prefix
+    if flask_app.config.from_prefixed_env(): # Load configuration from environment variables with "FLASK_" prefix
+        logging.info("Configuration loaded from environment variables")
+    else:
+        logging.warning("Cound not load environment variables with 'FLASK_' prefix")
 
     init_db(flask_app) # Initialize database with Flask app context
 
@@ -21,6 +25,11 @@ def create_app():
     flask_app.register_blueprint(price_blueprint)
     flask_app.register_blueprint(watchlist_blueprint)
     flask_app.register_blueprint(alerts_blueprint)
+
+    try:
+        start_scheduler(flask_app)
+    except (KeyboardInterrupt, SystemExit, Exception) as exception: 
+        logging.error(f"Scheduler shut down: {exception}")
     
     return flask_app
     

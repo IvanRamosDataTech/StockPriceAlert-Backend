@@ -1,3 +1,5 @@
+import statistics
+
 import yfinance as yf
 from datetime import datetime, timedelta
 import logging
@@ -56,7 +58,7 @@ class FinancialDataService:
         period - Data period to fetch (e.g. "1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "ytd", "max")
         interval - Data interval (e.g. "1m", "2m", "5m", "15m", "30m", "60m", "90m", "1h", "1d", "5d", "1wk", "1mo")
         
-        return - A list of dictionaries containing date and closing price
+        return - A Grouped dataframe containing date and closing price
         """
         try:    
             historical_prices = yf.download(ticker_list, period=period, interval=interval)
@@ -67,12 +69,35 @@ class FinancialDataService:
             clean_prices["Date"] = clean_prices["Date"].dt.strftime('%d-%m-%Y')
             # clean_prices
             grouped = clean_prices.groupby("Ticker")
-            return {
-                ticker: group.to_dict(orient="records") for ticker, group in grouped
-            }
+            return grouped
         except Exception as e:
             logger.error(f"Error fetching historical prices for tickers {ticker_list}: {e}")
             raise e
+
+
+    @staticmethod
+    def statistics_in_period(ticker_list, period="1mo", interval="1d"):
+        """
+        Get statistics for a list of tickers within a time window
+        
+        tickers - List of stock ticker symbols as strings e.g. ["AAPL", "GOOGL"]
+        period - Data period to fetch (e.g. "1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "ytd", "max")
+        interval - Data interval (e.g. "1m", "2m", "5m", "15m", "30m", "60m", "90m", "1h", "1d", "5d", "1wk", "1mo")
+        
+        return - A dictionary with tickers and their respective statistics
+        """
+        prices_in_period = FinancialDataService.historical_tickers_prices(ticker_list, period, interval) 
+        statistics = {}
+        for ticker, group in prices_in_period:
+            statistics[ticker] = {
+                    "minimum": round(group["Low"].min(), 2),
+                    "maximum": round(group["High"].max(), 2),
+                    "average": round(group["Close"].mean(), 2),
+                    "volatility": round(group["Close"].std(), 2)
+                }
+        
+        return statistics
+         
         
     @staticmethod
     def get_ticker_statistics(ticker, period, interval):
