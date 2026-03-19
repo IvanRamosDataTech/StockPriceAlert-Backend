@@ -36,6 +36,9 @@ class Asset(db.Model):
             self.max_month_price = self.price
         self.updated_at = db.func.current_timestamp()
 
+    def update_modification_date(self):
+        self.updated_at = db.func.current_timestamp()
+
     def __str__(self):
         info = f"<Asset {self.ticker} - {self.displayed_name}> \n"
         info += "Alerts: \n"

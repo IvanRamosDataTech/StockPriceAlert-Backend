@@ -81,7 +81,8 @@ def get_historical_prices():
         return jsonify({"error": "No tickers provided"}), 400
     
     try:
-        return jsonify(FinancialDataService.historical_tickers_prices(ticker_list, period=selected_period, interval=selected_interval))
+        historical_prices = FinancialDataService.historical_tickers_prices(ticker_list, period=selected_period, interval=selected_interval)
+        return { ticker: group.to_dict(orient="records") for ticker, group in historical_prices }
     except Exception as e:
         logger.error(f"Error fetching historical prices for tickers {ticker_list}: {e}")
         return jsonify({"error": "Failed to fetch historical prices"}), 500

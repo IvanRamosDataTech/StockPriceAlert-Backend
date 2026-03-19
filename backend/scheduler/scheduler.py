@@ -7,7 +7,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime
 import time
 from .price_updater_job import update_prices_and_alerts
-from .history_fetcher_job import fetch_daily_history
+from .history_fetcher_job import update_monthly_stats
 from .experimental.telegram_messages_job import send_test_telegram_message
 from .experimental.simulated_price_updater_job import simulate_fecthing_prices
 from .experimental.simulated_history_fetcher_job import simulate_fecthing_history
@@ -38,14 +38,24 @@ def start_scheduler(app):
     
     ### Test orchestration queue - uncomment for testing experimenta job executions
 
-    scheduler.add_job(
-        func=update_prices_and_alerts,
-        trigger="interval",
-        seconds=30,  # Use seconds for testing
-        args=[app],
-        id="last_prices_fetch",
-        replace_existing=True,
-    )
+
+    # scheduler.add_job(
+    #     func=update_monthly_stats,
+    #     trigger='interval',
+    #     seconds=30,  # Use seconds for testing
+    #     args=[app],
+    #     id="monthly_prices_fetch",
+    #     replace_existing=True
+    # )
+
+    # scheduler.add_job(
+    #     func=update_prices_and_alerts,
+    #     trigger="interval",
+    #     seconds=30,  # Use seconds for testing
+    #     args=[app],
+    #     id="last_prices_fetch",
+    #     replace_existing=True,
+    # )
 
     # scheduler.add_job(
     #     func=updated_price_send_alert,
@@ -89,29 +99,29 @@ def start_scheduler(app):
 
     ### Development orchestrationt queue - uncomment for real data fetching
     
-    # scheduler.add_job(
-    #     func=update_prices_and_alerts,
-    #     trigger="interval",
-    #     minutes=last_prices_minutes,
-    #     args=[app],
-    #     id="last_prices_fetch",
-    #     replace_existing=True,
-    # )
+    scheduler.add_job(
+        func=update_prices_and_alerts,
+        trigger="interval",
+        minutes=last_prices_minutes,
+        args=[app],
+        id="last_prices_fetch",
+        replace_existing=True,
+    )
 
-    # scheduler.add_job(
-    #     func=fetch_daily_history,
-    #     trigger="interval",
-    #     minutes=history_minutes,
-    #     args=[app],
-    #     id="historical_fetch",
-    #     replace_existing=True,
-    # )
+    scheduler.add_job(
+        func=update_monthly_stats,
+        trigger="interval",
+        minutes=history_minutes,
+        args=[app],
+        id="historical_fetch",
+        replace_existing=True,
+    )
 
     scheduler.start()
     _scheduler = scheduler
     logger.info(
-        #"Scheduler started with intervals (minutes): last_prices=%s, history=%s",
-        "Scheduler started in test mode with intervals (seconds): last_prices=%s, history=%s",
+        "Scheduler started with intervals (minutes): last_prices=%s, history=%s",
+        #"Scheduler started in test mode with intervals (seconds): last_prices=%s, history=%s",
         last_prices_minutes,
         history_minutes,
     )
