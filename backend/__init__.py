@@ -4,6 +4,7 @@ from backend.routes.general import general_blueprint
 from backend.routes.prices import price_blueprint
 from backend.routes.watchlists import watchlist_blueprint
 from backend.routes.alerts import alerts_blueprint
+from backend.routes.telegrams import telegrams_blueprint
 from backend.scheduler.scheduler import start_scheduler
 import logging
 
@@ -25,6 +26,7 @@ def create_app():
     flask_app.register_blueprint(price_blueprint)
     flask_app.register_blueprint(watchlist_blueprint)
     flask_app.register_blueprint(alerts_blueprint)
+    flask_app.register_blueprint(telegrams_blueprint)
 
     try:
         start_scheduler(flask_app)
