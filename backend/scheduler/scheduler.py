@@ -121,7 +121,6 @@ def start_scheduler(app):
     _scheduler = scheduler
     logger.info(
         "Scheduler started with intervals (minutes): last_prices=%s, history=%s",
-        #"Scheduler started in test mode with intervals (seconds): last_prices=%s, history=%s",
         last_prices_minutes,
         history_minutes,
     )

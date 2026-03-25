@@ -12,8 +12,16 @@ def _help_command(args):
         "Available commands:\n"
         "/help - Show this help message\n"
         "/search {query} - Searches for assets matching with given term. \n"
-        "/status - Get the current status of the system\n"
-        # Add more commands as needed
+        "/ex_rate - Returns the latest exchange rate for USD/MXN.\n"
+        "/watchlists {watchlist_name} - Returns all user's watchlists. Optionally, can provide a name to filter.\n"
+        "/watchlist-new {watchlist_name} - Creates a new watchlist with the given name.\n"
+        "/watchlist-add {watchlist_name} {asset_ticker} - Adds an asset to a watchlist.\n"
+        "/watchlist-remove {watchlist_name} {asset_ticker} - Removes an asset from a watchlist.\n"
+        "/watchlist-delete {watchlist_name} - Deletes a watchlist.\n"
+        "/alerts {asset_ticker} - Returns all user's alerts. Optionally, can filter alerts by asset ticker.\n"
+        "/alert_set {asset_ticker} {alert_type} {target_price} - Sets a new alert for an asset. Alert type can be 'MonthMinimum', 'PriceAbove' or 'PriceBelow'.\n"
+        "/alert_unset {alert_id} - Removes an alert by its ID.\n"
+        "/alert_update {alert_id} {alert_type} {new_target_price} - Updates the target price of an existing alert.\n"
     )
     TelegramService.send_message(current_app, help_text)
 
