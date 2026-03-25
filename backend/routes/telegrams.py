@@ -41,6 +41,18 @@ def _search_command(args):
         TelegramService.send_message(current_app, f"Error processing search command: {e}")
         return
     
+def _exchange_rate_command(args):
+    try:
+        rate = "USD/MXN"
+        exchange_rate = FinancialDataService.exchange_rate(rate)
+        if exchange_rate:
+            TelegramService.send_message(current_app, f"{round(exchange_rate['rate'], 4)}")
+        else:
+            TelegramService.send_message(current_app, f"Could not retrieve exchange rate for {rate}.")
+    except Exception as e:
+        logger.error(f"Error fetching exchange rate {rate}: {e}")
+        TelegramService.send_message(current_app, f"Error fetching exchange rate {rate}: {e}")
+        return
 
 def _process_command(command):
     logger.info(f"Processing Telegram command: {command}")
@@ -49,6 +61,7 @@ def _process_command(command):
     switcher = {
         "/help": _help_command,
         "/search": _search_command,
+        "/ex_rate": _exchange_rate_command
     }
     func = switcher.get(cmd, None)
     if func:
