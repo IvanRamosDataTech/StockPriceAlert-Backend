@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
 import logging
 from ..services.telegram_service import TelegramService
+from ..services.finantial_data_service import FinancialDataService
 from flask import current_app
 
 logger = logging.getLogger(__name__)
@@ -32,12 +33,12 @@ def _search_command(args):
             TelegramService.send_message(current_app, "Please provide a search term after the /search command.")
             return
         
-        query = args[0]
-        search_results = f"Search results for '{query}':\n1. Result 1\n2. Result 2\n3. Result 3"
+        query = " ".join(args)
+        search_results = FinancialDataService.search_tickers(query, maximum_results=15)
         TelegramService.send_message(current_app, search_results)
     except Exception as e:
         logger.error(f"Error processing search command: {e}")
-        TelegramService.send_message(current_app, "An error occurred while processing your search. Please try again.")
+        TelegramService.send_message(current_app, f"Error processing search command: {e}")
         return
     
 
