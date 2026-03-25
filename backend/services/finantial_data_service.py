@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 class FinancialDataService:
 
     @staticmethod
-    def latest_prices(tickers=[]):
+    def latest_prices(tickers=[], conversion="USD/MXN"):
         """
         Get the latest prices for a list of tickers
         
@@ -19,7 +19,8 @@ class FinancialDataService:
         
         try:
             indexed_prices = yf.Tickers(ticker_list)
-            prices = {ticker: indexed_prices.tickers[ticker].info['regularMarketPrice'] for ticker in ticker_list}
+            conversion_rate = FinancialDataService.exchange_rate(conversion)
+            prices = {ticker: {"original_price": indexed_prices.tickers[ticker].info['regularMarketPrice'], "converted_price": round(indexed_prices.tickers[ticker].info['regularMarketPrice'] * conversion_rate['rate'], 2)} for ticker in ticker_list}
             return prices
         except Exception as e:
             logger.error(f"Error fetching prices for tickers {ticker_list}: {e}")

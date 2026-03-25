@@ -14,6 +14,7 @@ def _help_command(args):
         "/help - Show this help message\n"
         "/search {query} - Searches for assets matching with given term. \n"
         "/ex_rate - Returns the latest exchange rate for USD/MXN.\n"
+        "/prices {ticker1 ticker2 ...} - Returns the latest prices for a list of asset tickers. Asset tickers should be provided as space separated values.\n"
         "/watchlists {watchlist_name} - Returns all user's watchlists. Optionally, can provide a name to filter.\n"
         "/watchlist-new {watchlist_name} - Creates a new watchlist with the given name.\n"
         "/watchlist-add {watchlist_name} {asset_ticker} - Adds an asset to a watchlist.\n"
@@ -54,6 +55,20 @@ def _exchange_rate_command(args):
         TelegramService.send_message(current_app, f"Error fetching exchange rate {rate}: {e}")
         return
 
+def _prices_command(args):
+    try:
+        if len(args) == 0:
+            TelegramService.send_message(current_app, "Missing tickers. Please provide a list of asset tickers e.g. /prices AAPL GOOGL MSFT")
+            return
+        
+        tickers = [arg.strip() for arg in args if arg.strip()]
+        prices = FinancialDataService.latest_prices(tickers)
+        TelegramService.send_message(current_app, prices)
+    except Exception as e:
+        logger.error(f"Error processing prices command: {e}")
+        TelegramService.send_message(current_app, f"Error processing prices command: {e}")
+        return
+
 def _process_command(command):
     logger.info(f"Processing Telegram command: {command}")
     args = command.split()
@@ -61,7 +76,8 @@ def _process_command(command):
     switcher = {
         "/help": _help_command,
         "/search": _search_command,
-        "/ex_rate": _exchange_rate_command
+        "/ex_rate": _exchange_rate_command,
+        "/prices": _prices_command
     }
     func = switcher.get(cmd, None)
     if func:

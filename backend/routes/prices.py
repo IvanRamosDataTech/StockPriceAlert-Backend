@@ -19,13 +19,14 @@ def get_latest_prices():
     
     tickers = request.args.get('tickers', '')
     ticker_list = [ticker.strip() for ticker in tickers.split(',') if ticker.strip()]
+    exchange=request.args.get('conversion', 'USD/MXN')
     
     if not ticker_list:
         return jsonify({"error": "No tickers provided"}), 400
     
     try:
-        logger.info(f"Fetching latest prices for tickers: {ticker_list}")
-        return jsonify(FinancialDataService.latest_prices(ticker_list))
+        logger.info(f"Fetching latest prices for tickers: {ticker_list} with conversion: {exchange}")
+        return jsonify(FinancialDataService.latest_prices(ticker_list, conversion=exchange))
     except Exception as e:
         logger.error(f"Error fetching prices for tickers {ticker_list}: {e}")
         return jsonify({"error": "Failed to fetch prices"}), 500
