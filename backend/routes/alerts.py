@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify
 from ..models.alert import Alert
 from ..models.asset import Asset
 from ..persistance.db_manager import get_db_session
+from ..logic_units.alerts_units import fetch_alerts
 
 import logging
 
@@ -17,19 +18,14 @@ def get_alerts():
     query parameters: stock (optional) - ticker symbol to filter alerts by stock
     """
     logger.info("/api/alerts route called")
-    
+
     stock = request.args.get('stock', None)
     try:
-        if stock:        
-            asset = Asset.query.filter_by(ticker=stock).first()
-            if not asset:
-                return jsonify({"error": f"No asset found with ticker {stock} in any of your watchlists"}), 404
-            else:
-                alerts = asset.alerts
-                return jsonify({"message": f"All alerts registered for {stock}", "alerts": [str(alert) for alert in alerts]})
-        else:
-            alerts = Alert.query.all()
-            return jsonify({"message": "All alerts registered in system", "alerts": [str(alert) for alert in alerts]})
+        payload = fetch_alerts(stock)
+        return jsonify(payload), 200
+    except LookupError as le:
+        logger.error(f"Error fetching alerts: {le}")
+        return jsonify({"error": str(le)}), 404
     except Exception as e:
         logger.error(f"Error fetching alerts: {e}")
         return jsonify({"error": "Failed to fetch alerts"}), 500
