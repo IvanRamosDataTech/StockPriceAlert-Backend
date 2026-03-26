@@ -14,6 +14,8 @@ def get_watchlists():
     """
     Endpoint to retrieve all watchlists with their associated assets.
     Example: GET /api/watchlists/
+    Optionally accepts a name query parameter to filter watchlists by name (case-insensitive, partial match).
+    Example: GET /api/watchlists/?name=tech
     Return format: json list of watchlists with their assets
     example response:
     {
@@ -30,7 +32,12 @@ def get_watchlists():
     ]
     """
     try:
-        watchlists = Watchlist.query.all()
+        name_filter = request.args.get('name')
+        if name_filter:
+            watchlists = Watchlist.query.filter(Watchlist.name.ilike(f"%{name_filter}%")).all()
+        else:
+            watchlists = Watchlist.query.all()
+    
         watchlists_data = []
         for watchlist in watchlists:
             assets_in_watchlist = []
