@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request
 import logging
 from ..services.telegram_service import TelegramService
 from ..services.finantial_data_service import FinancialDataService
-from ..logic_units.watchlists_units import fetch_watchlists
+from ..logic_units.watchlists_units import fetch_watchlists, new_watchlist
 from flask import current_app
 
 logger = logging.getLogger(__name__)
@@ -17,10 +17,10 @@ def _help_command(args):
         "/ex_rate - Returns the latest exchange rate for USD/MXN.\n"
         "/prices {ticker1 ticker2 ...} - Returns the latest prices for a list of asset tickers. Asset tickers should be provided as space separated values.\n"
         "/watchlists {watchlist_name} - Returns all user's watchlists. Optionally, can provide a name to filter.\n"
-        "/watchlist-new {watchlist_name} - Creates a new watchlist with the given name.\n"
-        "/watchlist-add {watchlist_name} {asset_ticker} - Adds an asset to a watchlist.\n"
-        "/watchlist-remove {watchlist_name} {asset_ticker} - Removes an asset from a watchlist.\n"
-        "/watchlist-delete {watchlist_name} - Deletes a watchlist.\n"
+        "/watchlist_new {watchlist_name} - Creates a new watchlist with the given name.\n"
+        "/watchlist_add {watchlist_name} {asset_ticker} - Adds an asset to a watchlist.\n"
+        "/watchlist_remove {watchlist_name} {asset_ticker} - Removes an asset from a watchlist.\n"
+        "/watchlist_delete {watchlist_name} - Deletes a watchlist.\n"
         "/alerts {asset_ticker} - Returns all user's alerts. Optionally, can filter alerts by asset ticker.\n"
         "/alert_set {asset_ticker} {alert_type} {target_price} - Sets a new alert for an asset. Alert type can be 'MonthMinimum', 'PriceAbove' or 'PriceBelow'.\n"
         "/alert_unset {alert_id} - Removes an alert by its ID.\n"
@@ -79,6 +79,23 @@ def _watchlists_command(args):
         logger.error(f"Error processing watchlists command: {e}")
         TelegramService.send_message(current_app, f"Error processing watchlists command: {e}")
         return
+    
+def _watchlist_new_command(args):
+    try:
+        if len(args) == 0:
+            TelegramService.send_message(current_app, "Missing watchlist name. Please provide a name for the new watchlist e.g. /watchlist-new Tech Stocks")
+            return
+        
+        name = " ".join(args)
+        (id, name) = new_watchlist(name)        
+        TelegramService.send_message(current_app, f"Watchlist created successfully with id {id} and name '{name}'")
+    except ValueError as ve:
+        logger.error(f"Error creating watchlist: {ve}")
+        TelegramService.send_message(current_app, f"Error creating watchlist: {ve}")
+    except Exception as e:
+        logger.error(f"Error processing watchlist-new command: {e}")
+        TelegramService.send_message(current_app, f"Error processing watchlist-new command: {e}")
+        return
 
 def _process_command(command):
     logger.info(f"Processing Telegram command: {command}")
@@ -89,7 +106,8 @@ def _process_command(command):
         "/search": _search_command,
         "/ex_rate": _exchange_rate_command,
         "/prices": _prices_command,
-        "/watchlists": _watchlists_command
+        "/watchlists": _watchlists_command,
+        "/watchlist_new": _watchlist_new_command
     }
     func = switcher.get(cmd, None)
     if func:

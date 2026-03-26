@@ -3,7 +3,7 @@ from ..services.finantial_data_service import FinancialDataService
 from ..models.watchlist import Watchlist
 from ..models.asset import Asset
 from ..persistance.db_manager import get_db_session
-from ..logic_units.watchlists_units import fetch_watchlists
+from ..logic_units.watchlists_units import fetch_watchlists, new_watchlist
 import logging
 
 logger = logging.getLogger(__name__)
@@ -54,20 +54,15 @@ def create_watchlist():
         return jsonify({"error": "Missing 'name' in request body"}), 400
     name = data['name']
 
-    
     try:
-        with get_db_session() as session:
-            new_watchlist = Watchlist(name=name)
-            # Check if watchlist with the same name already exists
-            if new_watchlist.name_available():
-                session.add(new_watchlist)
-                session.commit()
-                return jsonify({"message": f"Watchlist '{name}' created successfully", "watchlist": {"id": new_watchlist.id, "name": new_watchlist.name}}), 201
-            else:
-                return jsonify({"error": f"Watchlist with name '{name}' already exists"}), 409
+        (id, name) = new_watchlist(name)        
+        return jsonify({"message": f"Watchlist created successfully", "watchlist": {"id": id, "name": name}}), 201                
+    except ValueError as ve:
+        logger.error(f"Error creating watchlist: {ve}")
+        return jsonify({"error": f"Watchlist with name '{name}' already exists"}), 409
     except Exception as e:
         logger.error(f"Error creating watchlist: {e}")
-        return jsonify({"error": "Failed to create watchlist"}), 500
+        return jsonify({"error": f"Failed to create watchlist: {e}"}), 500
     finally:
         pass
 

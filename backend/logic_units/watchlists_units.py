@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import List, Optional
 
 from ..models.watchlist import Watchlist
+from ..persistance.db_manager import get_db_session
 
 
 def fetch_watchlists(name_filter: Optional[str] = None) -> List[dict]:
@@ -49,3 +50,21 @@ def fetch_watchlists(name_filter: Optional[str] = None) -> List[dict]:
 	return watchlists_data
 
 
+def new_watchlist(name: str) -> tuple[int, str]:
+    """Create and return a new watchlist.
+    Args:
+        name (str): The name of the new watchlist.
+    Returns:
+        tuple[int, str]: The ID and name of the newly created watchlist.
+    Raises:
+        ValueError: If a watchlist with the same name already exists.
+	"""
+    with get_db_session() as session:
+        new_watchlist = Watchlist(name=name)
+        # Check if watchlist with the same name already exists
+        if new_watchlist.name_available():
+            session.add(new_watchlist)
+            session.commit()
+            return new_watchlist.id, new_watchlist.name
+        else:
+            raise ValueError(f"Watchlist with name '{name}' already exists")
