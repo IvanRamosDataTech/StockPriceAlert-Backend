@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, request
 import logging
 from ..services.telegram_service import TelegramService
 from ..services.finantial_data_service import FinancialDataService
+from ..logic_units.watchlists_units import fetch_watchlists
 from flask import current_app
 
 logger = logging.getLogger(__name__)
@@ -68,6 +69,16 @@ def _prices_command(args):
         logger.error(f"Error processing prices command: {e}")
         TelegramService.send_message(current_app, f"Error processing prices command: {e}")
         return
+    
+def _watchlists_command(args):
+    try:
+        name_filter = " ".join(args) if len(args) > 0 else None
+        watchlists = fetch_watchlists(name_filter)
+        TelegramService.send_message(current_app, watchlists)
+    except Exception as e:
+        logger.error(f"Error processing watchlists command: {e}")
+        TelegramService.send_message(current_app, f"Error processing watchlists command: {e}")
+        return
 
 def _process_command(command):
     logger.info(f"Processing Telegram command: {command}")
@@ -77,7 +88,8 @@ def _process_command(command):
         "/help": _help_command,
         "/search": _search_command,
         "/ex_rate": _exchange_rate_command,
-        "/prices": _prices_command
+        "/prices": _prices_command,
+        "/watchlists": _watchlists_command
     }
     func = switcher.get(cmd, None)
     if func:
