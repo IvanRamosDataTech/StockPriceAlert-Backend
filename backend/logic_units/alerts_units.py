@@ -52,3 +52,23 @@ def create_alert(ticker: str, alert_type: str, target_price: Optional[float]) ->
         )
         session.add(new_alert)
         return {"message": "Alert created successfully", "stock": str(asset)}
+
+
+def delete_alert(alert_id: int) -> dict:
+    """Delete an alert by ID and return a confirmation payload."""
+
+    with get_db_session() as session:
+        alert = Alert.query.get(alert_id)
+        if not alert:
+            raise LookupError(f"No alert found with ID {alert_id}")
+
+        payload = {
+            "message": (
+                f"Alert {alert.alert_type} "
+                f"{alert.price_threshold if alert.price_threshold is not None else ''} "
+                f"for asset {alert.asset.ticker} successfully deleted"
+            ).strip(),
+            "alert_id": alert.id,
+        }
+        session.delete(alert)
+        return payload

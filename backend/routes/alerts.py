@@ -1,8 +1,5 @@
 from flask import Blueprint, request, jsonify
-from ..models.alert import Alert
-from ..models.asset import Asset
-from ..persistance.db_manager import get_db_session
-from ..logic_units.alerts_units import fetch_alerts, create_alert
+from ..logic_units.alerts_units import create_alert, delete_alert, fetch_alerts
 
 import logging
 
@@ -79,13 +76,11 @@ def unset_alert(alert_id):
     logger.info(f"/api/alerts/{alert_id} DELETE route called")
     
     try:
-        with get_db_session() as session:
-            alert = Alert.query.get(alert_id)
-            if not alert:
-                return jsonify({"error": f"No alert found with ID {alert_id}"}), 404
-    
-            session.delete(alert)
-            return jsonify({"message": f"Alert {alert.alert_type} {alert.price_threshold if alert.price_threshold is not None else ''} for asset {alert.asset.ticker} successfully deleted"})
+        payload = delete_alert(alert_id)
+        return jsonify(payload), 200
+    except LookupError as le:
+        logger.error(f"Error deleting alert: {le}")
+        return jsonify({"error": str(le)}), 404
     except Exception as e:
         logger.error(f"Error deleting alert: {e}")
         return jsonify({"error": "Failed to delete alert"}), 500
