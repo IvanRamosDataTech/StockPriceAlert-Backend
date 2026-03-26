@@ -32,6 +32,13 @@ def fetch_alerts(asset_ticker: Optional[str] = None) -> Dict[str, List[str] | st
 
 def create_alert(ticker: str, alert_type: str, target_price: Optional[float]) -> dict:
     """Create a new alert for a given ticker after validating the asset exists."""
+    if alert_type not in ["MonthMinimum", "MonthMaximum", "PriceBelow", "PriceAbove"]:
+        raise ValueError(
+            f"Invalid alert_type '{alert_type}'. Must be one of: MonthMinimum, MonthMaximum, PriceBelow, PriceAbove"
+        )
+    
+    if alert_type in ["PriceBelow", "PriceAbove"] and target_price is None:
+        raise ValueError("target_price is required for PriceBelow and PriceAbove alert types")
 
     with get_db_session() as session:
         asset = Asset.query.filter_by(ticker=ticker).first()
