@@ -11,6 +11,14 @@ from ..persistance.db_manager import get_db_session
 
 logger = logging.getLogger(__name__)
 
+_ALLOWED_ALERT_TYPES = {
+    "MonthMinimum",
+    "MonthMaximum",
+    "PriceBelow",
+    "PriceAbove",
+}
+_PRICE_THRESHOLD_TYPES = {"PriceBelow", "PriceAbove"}
+
 
 def fetch_alerts(asset_ticker: Optional[str] = None) -> Dict[str, List[str] | str]:
     """Return serialized alerts, optionally filtered by asset ticker."""
@@ -32,12 +40,12 @@ def fetch_alerts(asset_ticker: Optional[str] = None) -> Dict[str, List[str] | st
 
 def create_alert(ticker: str, alert_type: str, target_price: Optional[float]) -> dict:
     """Create a new alert for a given ticker after validating the asset exists."""
-    if alert_type not in ["MonthMinimum", "MonthMaximum", "PriceBelow", "PriceAbove"]:
+    if alert_type not in _ALLOWED_ALERT_TYPES:
         raise ValueError(
             f"Invalid alert_type '{alert_type}'. Must be one of: MonthMinimum, MonthMaximum, PriceBelow, PriceAbove"
         )
     
-    if alert_type in ["PriceBelow", "PriceAbove"] and target_price is None:
+    if alert_type in _PRICE_THRESHOLD_TYPES and target_price is None:
         raise ValueError("target_price is required for PriceBelow and PriceAbove alert types")
 
     with get_db_session() as session:
@@ -72,3 +80,33 @@ def delete_alert(alert_id: int) -> dict:
         }
         session.delete(alert)
         return payload
+
+
+def update_alert(alert_id: int, alert_type: str, target_price: Optional[float]) -> dict:
+    """Update the alert type/threshold for a given alert ID."""
+
+    if alert_type not in _ALLOWED_ALERT_TYPES:
+        raise ValueError(
+            f"Invalid alert_type '{alert_type}'. Must be one of: MonthMinimum, MonthMaximum, PriceBelow, PriceAbove"
+        )
+
+    if alert_type in _PRICE_THRESHOLD_TYPES and target_price is None:
+        raise ValueError("target_price is required for PriceBelow and PriceAbove alert types")
+
+    with get_db_session() as session:
+        alert = Alert.query.get(alert_id)
+        if not alert:
+            raise LookupError(f"No alert found with ID {alert_id}")
+
+        alert.alert_type = alert_type
+        alert.price_threshold = target_price
+        session.add(alert)
+
+        return {
+            "message": (
+                f"Alert {alert.alert_type} "
+                f"{alert.price_threshold if alert.price_threshold is not None else ''} "
+                f"for asset {alert.asset.ticker} updated successfully"
+            ).strip(),
+            "alert_id": alert.id,
+        }

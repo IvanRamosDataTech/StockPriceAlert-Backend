@@ -1,5 +1,10 @@
 from flask import Blueprint, request, jsonify
-from ..logic_units.alerts_units import create_alert, delete_alert, fetch_alerts
+from ..logic_units.alerts_units import (
+    create_alert,
+    delete_alert,
+    fetch_alerts,
+    update_alert as update_alert_logic,
+)
 
 import logging
 
@@ -110,19 +115,14 @@ def update_alert(alert_id):
         return jsonify({"error": "target_price must be a number"}), 400
     
     try:
-        with get_db_session() as session:
-            alert = Alert.query.get(alert_id)
-            if not alert:
-                return jsonify({"error": f"No alert found with ID {alert_id}"}), 404
-            
-            alert.alert_type = alert_type
-            alert.price_threshold = target_price
-            session.add(alert)
-            return jsonify({"message": f"Alert {alert.alert_type} {alert.price_threshold if alert.price_threshold is not None else ''} for asset {alert.asset.ticker} updated successfully"})
+        payload = update_alert_logic(alert_id, alert_type, target_price)
+        return jsonify(payload), 200
+    except LookupError as le:
+        logger.error(f"Error updating alert: {le}")
+        return jsonify({"error": str(le)}), 404
     except ValueError as ve:
         logger.error(f"Error updating alert: {ve}")
         return jsonify({"error": str(ve)}), 400
-    
     except Exception as e:
         logger.error(f"Error updating alert: {e}")
         return jsonify({"error": "Failed to update alert"}), 500
