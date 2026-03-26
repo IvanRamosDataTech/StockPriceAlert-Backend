@@ -57,20 +57,15 @@ def set_alert():
     if not isinstance(target_price, (int, float)) and target_price is not None:
         return jsonify({"error": "target_price must be a number"}), 400
 
-
-    if alert_type not in ["MonthMinimum", "MonthMaximum", "PriceBelow", "PriceAbove"]:
-        return jsonify({"error": "Invalid alert_type. Accepted values are: MonthMinimum, MonthMaximum, PriceBelow, PriceAbove"}), 400
-
-    if alert_type in ["PriceBelow", "PriceAbove"] and target_price is None:
-        return jsonify({"error": "target_price is required for PriceBelow and PriceAbove alert types"}), 400
-    
-
     try:
         payload = create_alert(ticker, alert_type, target_price)
         return jsonify(payload), 201
     except LookupError as le:
         logger.error(f"Error creating alert: {le}")
         return jsonify({"error": str(le)}), 404
+    except ValueError as ve:
+        logger.error(f"Error creating alert: {ve}")
+        return jsonify({"error": str(ve)}), 400
     except Exception as e:
         logger.error(f"Error creating alert: {e}")
         return jsonify({"error": "Failed to create alert"}), 500
@@ -118,12 +113,6 @@ def update_alert(alert_id):
     
     if not isinstance(target_price, (int, float)) and target_price is not None:
         return jsonify({"error": "target_price must be a number"}), 400
-
-    if alert_type not in ["MonthMinimum", "MonthMaximum", "PriceBelow", "PriceAbove"]:
-        return jsonify({"error": "Invalid alert_type. Accepted values are: MonthMinimum, MonthMaximum, PriceBelow, PriceAbove"}), 400
-
-    if alert_type in ["PriceBelow", "PriceAbove"] and target_price is None:
-        return jsonify({"error": "target_price is required for PriceBelow and PriceAbove alert types"}), 400
     
     try:
         with get_db_session() as session:
@@ -135,6 +124,10 @@ def update_alert(alert_id):
             alert.price_threshold = target_price
             session.add(alert)
             return jsonify({"message": f"Alert {alert.alert_type} {alert.price_threshold if alert.price_threshold is not None else ''} for asset {alert.asset.ticker} updated successfully"})
+    except ValueError as ve:
+        logger.error(f"Error updating alert: {ve}")
+        return jsonify({"error": str(ve)}), 400
+    
     except Exception as e:
         logger.error(f"Error updating alert: {e}")
         return jsonify({"error": "Failed to update alert"}), 500
