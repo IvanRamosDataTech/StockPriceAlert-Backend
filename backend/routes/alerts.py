@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from ..models.alert import Alert
 from ..models.asset import Asset
 from ..persistance.db_manager import get_db_session
-from ..logic_units.alerts_units import fetch_alerts
+from ..logic_units.alerts_units import fetch_alerts, create_alert
 
 import logging
 
@@ -66,14 +66,11 @@ def set_alert():
     
 
     try:
-        with get_db_session() as session:
-            asset = Asset.query.filter_by(ticker=ticker).first()
-            if not asset:
-                return jsonify({"error": f"No asset found with ticker {ticker} in any of your watchlists"}), 404
-            
-            new_alert = Alert(ticker=ticker, alert_type=alert_type, price_threshold=target_price)
-            session.add(new_alert)
-            return jsonify({"message": "Alert created successfully", "stock": str(asset)}), 201
+        payload = create_alert(ticker, alert_type, target_price)
+        return jsonify(payload), 201
+    except LookupError as le:
+        logger.error(f"Error creating alert: {le}")
+        return jsonify({"error": str(le)}), 404
     except Exception as e:
         logger.error(f"Error creating alert: {e}")
         return jsonify({"error": "Failed to create alert"}), 500
