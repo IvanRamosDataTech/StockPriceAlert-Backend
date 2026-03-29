@@ -217,6 +217,29 @@ def _alert_unset_command(args):
         logger.error(f"Error processing alert_unset command: {e}")
         TelegramService.send_message(current_app, f"Error processing alert_unset command: {e}")
         return
+    
+def _alert_update_command(args):
+    if not args or len(args) < 2:
+        TelegramService.send_message(current_app, "Missing parameters. Please provide an alert id, an alert type and a target price e.g. /alert_update 5 PriceBelow 120")
+        return
+    
+    alert_id = args[0]
+    alert_type = args[1]
+    target_price = float(args[2]) if len(args) > 2 else None
+    
+    try:
+        update_status = update_alert(alert_id, alert_type, target_price)
+        TelegramService.send_message(current_app, update_status["message"])
+    except ValueError as ve:
+        logger.error(f"Error updating alert: {ve}")
+        TelegramService.send_message(current_app, f"Error updating alert: {ve}")
+    except LookupError as le:
+        logger.error(f"Error updating alert: {le}")
+        TelegramService.send_message(current_app, f"Error updating alert: {le}")
+    except Exception as e:
+        logger.error(f"Error processing alert_update command: {e}")
+        TelegramService.send_message(current_app, f"Error processing alert_update command: {e}")
+        return
 
 def _process_command(command):
     logger.info(f"Processing Telegram command: {command}")
@@ -234,7 +257,8 @@ def _process_command(command):
         "/watchlist_delete": _watchlist_delete_command,
         "/alerts": _alerts_command,
         "/alert_set": _alert_set_command,
-        "/alert_unset": _alert_unset_command
+        "/alert_unset": _alert_unset_command,
+        "/alert_update": _alert_update_command
     }
     func = switcher.get(cmd, None)
     if func:
