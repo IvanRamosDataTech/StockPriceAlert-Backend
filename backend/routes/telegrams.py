@@ -177,6 +177,29 @@ def _alerts_command(args):
         TelegramService.send_message(current_app, f"Error processing alerts command: {e}")
         return
 
+def _alert_set_command(args):
+    if not args or len(args) < 2:
+        TelegramService.send_message(current_app, "Missing parameters. Please provide at least an asset ticker and an alert type e.g. /alert_set AAPL PriceAbove 150")
+        return
+    
+    ticker = args[0]
+    alert_type = args[1]
+    target_price = float(args[2]) if len(args) > 2 else None
+    
+    try:
+        create_alert(ticker, alert_type, target_price)
+        TelegramService.send_message(current_app, f"Alert created successfully for {ticker} with type {alert_type} and target price {target_price}.")
+    except ValueError as ve:
+        logger.error(f"Error creating alert: {ve}")
+        TelegramService.send_message(current_app, f"Error creating alert: {ve}")
+    except LookupError as le:
+        logger.error(f"Error creating alert: {le}")
+        TelegramService.send_message(current_app, f"Error creating alert: {le}")
+    except Exception as e:
+        logger.error(f"Error processing alert_set command: {e}")
+        TelegramService.send_message(current_app, f"Error processing alert_set command: {e}")
+        return
+
 def _process_command(command):
     logger.info(f"Processing Telegram command: {command}")
     args = command.split()
@@ -191,7 +214,8 @@ def _process_command(command):
         "/watchlist_add": _watchlist_add_asset_command,
         "/watchlist_remove": _watchlist_remove_asset_command,
         "/watchlist_delete": _watchlist_delete_command,
-        "/alerts": _alerts_command
+        "/alerts": _alerts_command,
+        "/alert_set": _alert_set_command
     }
     func = switcher.get(cmd, None)
     if func:
