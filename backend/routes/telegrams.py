@@ -3,6 +3,8 @@ import logging
 from ..services.telegram_service import TelegramService
 from ..services.finantial_data_service import FinancialDataService
 from ..logic_units.watchlists_units import fetch_watchlists, new_watchlist, add_asset_to_watchlist, remove_asset_from_watchlist, delete_watchlist
+from ..logic_units.alerts_units import fetch_alerts, create_alert, delete_alert, update_alert
+
 from flask import current_app
 
 logger = logging.getLogger(__name__)
@@ -162,6 +164,19 @@ def _watchlist_delete_command(args):
         TelegramService.send_message(current_app, f"Error processing watchlist_delete command: {e}")
         return
 
+def _alerts_command(args):
+    try:
+        ticker = args[0] if len(args) > 0 else None
+        alerts = fetch_alerts(ticker)
+        TelegramService.send_message(current_app, alerts)
+    except LookupError as le:   
+        logger.error(f"Error fetching alerts: {le}")
+        TelegramService.send_message(current_app, f"Error fetching alerts: {le}")
+    except Exception as e:
+        logger.error(f"Error processing alerts command: {e}")
+        TelegramService.send_message(current_app, f"Error processing alerts command: {e}")
+        return
+
 def _process_command(command):
     logger.info(f"Processing Telegram command: {command}")
     args = command.split()
@@ -175,7 +190,8 @@ def _process_command(command):
         "/watchlist_new": _watchlist_new_command,
         "/watchlist_add": _watchlist_add_asset_command,
         "/watchlist_remove": _watchlist_remove_asset_command,
-        "/watchlist_delete": _watchlist_delete_command
+        "/watchlist_delete": _watchlist_delete_command,
+        "/alerts": _alerts_command
     }
     func = switcher.get(cmd, None)
     if func:
