@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request
 import logging
 from ..services.telegram_service import TelegramService
 from ..services.finantial_data_service import FinancialDataService
-from ..logic_units.watchlists_units import fetch_watchlists, new_watchlist, add_asset_to_watchlist
+from ..logic_units.watchlists_units import fetch_watchlists, new_watchlist, add_asset_to_watchlist, remove_asset_from_watchlist
 from flask import current_app
 
 logger = logging.getLogger(__name__)
@@ -99,8 +99,8 @@ def _watchlist_new_command(args):
 
 def _watchlist_add_command(args):
     
-    if args and len(args) < 2:
-        TelegramService.send_message(current_app, "Missing parameters. Please provide a watchlist name and an asset ticker e.g. /watchlist_add 'Tech Stocks' AAPL")
+    if not args or len(args) != 2:
+        TelegramService.send_message(current_app, "Missing parameters. Please provide a watchlist id and an asset ticker e.g. /watchlist_add 1 HOOD")
         return
     
     watchlist_id = args[0]
@@ -120,6 +120,28 @@ def _watchlist_add_command(args):
         TelegramService.send_message(current_app, f"Error processing watchlist_add command: {e}")
         return
         
+def _watchlist_remove_command(args):
+    
+    if not args or len(args) != 2:
+        TelegramService.send_message(current_app, "Missing parameters. Please provide a watchlist id and an asset ticker e.g. /watchlist_remove 3 GLXL")
+        return
+
+    watchlist_id = args[0]
+    ticker = args[1]
+    
+    try:
+        updated_watchlist = remove_asset_from_watchlist(watchlist_id, ticker)
+        TelegramService.send_message(current_app, f"Asset '{ticker}' removed from watchlist '{updated_watchlist['name']}' successfully.")
+    except ValueError as ve:
+        logger.error(f"Error removing asset from watchlist: {ve}")
+        TelegramService.send_message(current_app, f"Error removing asset from watchlist: {ve}")
+    except LookupError as le:
+        logger.error(f"Error removing asset from watchlist: {le}")
+        TelegramService.send_message(current_app, f"Error removing asset from watchlist: {le}")
+    except Exception as e:
+        logger.error(f"Error processing watchlist_remove command: {e}")
+        TelegramService.send_message(current_app, f"Error processing watchlist_remove command: {e}")
+        return
 
 def _process_command(command):
     logger.info(f"Processing Telegram command: {command}")
@@ -132,7 +154,8 @@ def _process_command(command):
         "/prices": _prices_command,
         "/watchlists": _watchlists_command,
         "/watchlist_new": _watchlist_new_command,
-        "/watchlist_add": _watchlist_add_command
+        "/watchlist_add": _watchlist_add_command,
+        "/watchlist_remove": _watchlist_remove_command
     }
     func = switcher.get(cmd, None)
     if func:
