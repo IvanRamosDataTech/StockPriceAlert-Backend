@@ -17,6 +17,7 @@ def _help_command(args):
         "/help - Show this help message\n"
         "/search {query} - Searches for assets matching with given term. \n"
         "/ex_rate - Returns the latest exchange rate for USD/MXN.\n"
+        "/convert {amount} - Converts a given amount from USD to MXN using the latest exchange rate. E.g. /convert 100\n"
         "/prices {ticker1 ticker2 ...} - Returns the latest prices for a list of asset tickers. Asset tickers should be provided as space separated values.\n"
         "/watchlists {watchlist_name} - Returns all user's watchlists. Optionally, can provide a name to filter.\n"
         "/watchlist_new {watchlist_id} - Creates a new watchlist with the given name.\n"
@@ -61,6 +62,28 @@ def _exchange_rate_command(args):
     except Exception as e:
         logger.error(f"Error fetching exchange rate {rate}: {e}")
         TelegramService.send_message(current_app, f"Error fetching exchange rate {rate}: {e}")
+        return
+
+def _convert_command(args):
+    try:
+        if len(args) == 0:
+            TelegramService.send_message(current_app, "Please provide an amount to convert after the /convert command. E.g. /convert 100")
+            return
+        
+        amount = float(args[0])
+        rate = "USD/MXN"
+        exchange_rate = FinancialDataService.exchange_rate(pair=rate)
+        if exchange_rate:
+            converted_amount = round(amount * exchange_rate['rate'], 2)
+            output = f"{converted_amount} MXN at rate {round(exchange_rate['rate'], 4)} MXN/USD"
+            TelegramService.send_message(current_app, output)
+        else:
+            TelegramService.send_message(current_app, f"Could not retrieve exchange rate for {rate}.")
+    except ValueError:
+        TelegramService.send_message(current_app, "Invalid amount provided. Please provide a numeric value to convert. E.g. /convert 100")
+    except Exception as e:
+        logger.error(f"Error converting currency: {e}")
+        TelegramService.send_message(current_app, f"Error converting currency: {e}")
         return
 
 def _prices_command(args):
@@ -262,6 +285,7 @@ def _process_command(command):
         "/help": _help_command,
         "/search": _search_command,
         "/ex_rate": _exchange_rate_command,
+        "/convert": _convert_command,
         "/prices": _prices_command,
         "/watchlists": _watchlists_command,
         "/watchlist_new": _watchlist_new_command,
