@@ -54,7 +54,8 @@ def _exchange_rate_command(args):
         rate = "USD/MXN"
         exchange_rate = FinancialDataService.exchange_rate(rate)
         if exchange_rate:
-            TelegramService.send_message(current_app, f"{round(exchange_rate['rate'], 4)}")
+            output = f"{round(exchange_rate['rate'], 4)} MXN"
+            TelegramService.send_message(current_app, output)
         else:
             TelegramService.send_message(current_app, f"Could not retrieve exchange rate for {rate}.")
     except Exception as e:
