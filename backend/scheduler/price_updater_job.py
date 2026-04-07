@@ -20,8 +20,8 @@ def update_prices_and_alerts(app):
 				tickers = [asset.ticker for asset in assets]
 				prices = FinancialDataService.latest_prices(tickers)
 				for asset in assets:
-					latest_price = prices.get(asset.ticker, asset.price)
-					asset.update_price_statistics(latest_price)
+					latest_price = prices.get(asset.ticker)
+					asset.update_price_statistics(latest_price.get('original_price'))
 				AlertService.check_all_alerts(app)
 			
 		except Exception as exc:
