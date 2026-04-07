@@ -1,4 +1,5 @@
 from ..persistance.db_manager import db
+from ..utils.time_utils import now_cts_time
 from .asset_watchlist import watchlist_asset
 
 class Asset(db.Model):
@@ -21,8 +22,8 @@ class Asset(db.Model):
     avg_month_price = db.Column(db.Float, nullable=False, default=0.0)
     alerts = db.relationship('Alert', back_populates='asset', cascade='all, delete-orphan')
     watchlists = db.relationship('Watchlist', secondary=watchlist_asset, back_populates='assets')
-    created_at = db.Column(db.DateTime, nullable=False, default=db.func.current_timestamp())
-    updated_at = db.Column(db.DateTime, nullable=False, default=db.func.current_timestamp())
+    created_at = db.Column(db.DateTime, nullable=False, default=now_cts_time)
+    updated_at = db.Column(db.DateTime, nullable=False, default=now_cts_time, onupdate=now_cts_time)
 
     def update_price_statistics(self, latest_price):
         self.previous_price = self.price
@@ -34,10 +35,10 @@ class Asset(db.Model):
             self.min_month_price = self.price
         if self.price > self.max_month_price:
             self.max_month_price = self.price
-        self.updated_at = db.func.current_timestamp()
+        self.updated_at = now_cts_time()
 
     def update_modification_date(self):
-        self.updated_at = db.func.current_timestamp()
+        self.updated_at = now_cts_time()
 
     def __str__(self):
         info = f"<Asset {self.ticker} - {self.displayed_name}> \n"

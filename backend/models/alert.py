@@ -1,4 +1,5 @@
 from ..persistance.db_manager import db
+from ..utils.time_utils import now_cts_time
 
 #supported types of alerts
 ALERT_TYPE_MONTH_LOW = "MonthMinimum"
@@ -17,7 +18,7 @@ class Alert(db.Model):
     last_triggered_at = db.Column(db.DateTime, nullable=True)
 
     def update_trigger_time(self):
-        self.last_triggered_at = db.func.current_timestamp()
+        self.last_triggered_at = now_cts_time()
 
     def __str__(self):
         info = f"<Alert {self.id} - {self.alert_type}  {self.price_threshold} for {self.ticker}>"

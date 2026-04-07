@@ -7,11 +7,20 @@ from backend.routes.alerts import alerts_blueprint
 from backend.routes.telegrams import telegrams_blueprint
 from backend.scheduler.scheduler import start_scheduler
 import logging
+import os
+import time
 
 print("Loading backend package ...")
 
 def create_app():
     flask_app = Flask(__name__)
+    flask_app.config.setdefault("APP_TIMEZONE", "Etc/GMT+6")
+
+    # Align process timezone for any localtime-based operations in runtime logs/utilities.
+    os.environ["TZ"] = flask_app.config["APP_TIMEZONE"]
+    if hasattr(time, "tzset"):
+        time.tzset()
+
     # Change to logging.DEBUG for more verbose output during development
     logging.basicConfig(level=logging.INFO)
     if flask_app.config.from_prefixed_env(): # Load configuration from environment variables with "FLASK_" prefix

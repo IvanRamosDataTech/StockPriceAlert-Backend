@@ -6,6 +6,7 @@ from backend.models.asset import Asset
 from backend.models.alert import Alert, ALERT_TYPE_MONTH_LOW, ALERT_TYPE_PRICE_BELOW, ALERT_TYPE_PRICE_ABOVE
 from backend.models.watchlist import Watchlist
 from backend.persistance.db_manager import db
+from backend.utils.time_utils import now_cts_time
 
 def populate_database():
     # Add some assets for testing
@@ -73,7 +74,7 @@ def update_asset(ticker, new_price, historical_prices=None):
         asset.price = new_price
         asset.price_change = asset.price - asset.previous_price
         asset.price_change_percent = (asset.price_change / asset.previous_price) * 100 if asset.previous_price else 0.0
-        asset.updated_at = db.func.current_timestamp()
+        asset.updated_at = now_cts_time()
         if historical_prices:
             asset.min_month_price = historical_prices.get("min_month_price", asset.min_month_price)
             asset.max_month_price = historical_prices.get("max_month_price", asset.max_month_price)
