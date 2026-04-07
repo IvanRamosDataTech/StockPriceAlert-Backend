@@ -69,9 +69,17 @@ def _prices_command(args):
             TelegramService.send_message(current_app, "Missing tickers. Please provide a list of asset tickers e.g. /prices AAPL GOOGL MSFT")
             return
         
-        tickers = [arg.strip() for arg in args if arg.strip()]
+        tickers = [arg.strip().upper() for arg in args if arg.strip()]
         prices = FinancialDataService.latest_prices(tickers)
-        TelegramService.send_message(current_app, prices)
+        output = ""
+        for ticker in tickers:
+            output += f"{ticker} {prices[ticker]['original_price']}"
+            if not ".MX" in ticker:
+                output += f", precio justo {prices[ticker]['converted_price']} MXN\n"
+            else:
+                output += "MXN\n"
+            
+        TelegramService.send_message(current_app, output)
     except Exception as e:
         logger.error(f"Error processing prices command: {e}")
         TelegramService.send_message(current_app, f"Error processing prices command: {e}")
