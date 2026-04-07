@@ -38,8 +38,12 @@ def _search_command(args):
             return
         
         query = " ".join(args)
-        search_results = FinancialDataService.search_tickers(query, maximum_results=15)
-        TelegramService.send_message(current_app, search_results)
+        search_results = FinancialDataService.search_tickers(query,maximum_results=7)
+
+        output = f"Found {len(search_results)} results:\n\n"
+        output += "\n".join([f"{result['ticker']} - \"{result['displayed_name']}\" ({result['exchange']}, {result['asset_type']})" for result in search_results])
+
+        TelegramService.send_message(current_app, output)
     except Exception as e:
         logger.error(f"Error processing search command: {e}")
         TelegramService.send_message(current_app, f"Error processing search command: {e}")

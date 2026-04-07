@@ -143,7 +143,7 @@ class FinancialDataService:
             for result in search_results:
                 refined_results.append({
                     "ticker": result['symbol'],
-                    "displayed_name": result['shortname'],
+                    "displayed_name": result['shortname'] if 'shortname' in result else result['longname'] if 'longname' in result else result['symbol'],
                     "exchange": result['exchange'],
                     "asset_type": result['quoteType']
                 })
