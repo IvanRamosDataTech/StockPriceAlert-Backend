@@ -102,7 +102,7 @@ class FinancialDataService:
          
         
     @staticmethod
-    def get_ticker_statistics(ticker, period, interval):
+    def get_ticker_info(ticker, period, interval):
         """
         Get basic statistics of price for a ticker in a given period, which can be used for alerting rules
         
@@ -116,14 +116,37 @@ class FinancialDataService:
             ticker_data = yf.Ticker(ticker)
             recent_history = ticker_data.history(period=period, interval=interval)
             return { "ticker": ticker_data.ticker,
+               ## Asset General info
                "displayed_name": ticker_data.info['shortName'],
+               "sector": ticker_data.info['sector'] if 'sector' in ticker_data.info else None,
+               "industry": ticker_data.info['industry'] if 'industry' in ticker_data.info else None,
+                ## Volume statistics
+                'volume': ticker_data.info['volume'] if 'volume' in ticker_data.info else None,
+                'averageVolume': ticker_data.info['averageVolume'] if 'averageVolume' in ticker_data.info else None,
+                'averageVolume10days': ticker_data.info['averageVolume10days'] if 'averageVolume10days' in ticker_data.info else None,
+                'averageDailyVolume10Day': ticker_data.info['averageDailyVolume10Day'] if 'averageDailyVolume10Day' in ticker_data.info else None,
+                'bid': ticker_data.info['bid'] if 'bid' in ticker_data.info else None,
+                'bidSize': ticker_data.info['bidSize'] if 'bidSize' in ticker_data.info else None,
+                'ask': ticker_data.info['ask'] if 'ask' in ticker_data.info else None,
+                'askSize': ticker_data.info['askSize'] if 'askSize' in ticker_data.info else None,
+                ## Price statistics 
                "previous_price": ticker_data.info['previousClose'],
                 "current_price": ticker_data.info['regularMarketPrice'],
                 "min_price_in_period": round(recent_history["Low"].min(), 2),
                 "max_price_in_period": round(recent_history["High"].max(), 2),
                 "avg_price_in_period": round(recent_history["Close"].mean(), 2),
+                "50DayAverage": ticker_data.info['fiftyDayAverage'] if 'fiftyDayAverage' in ticker_data.info else None,
+                "200DayAverage": ticker_data.info['twoHundredDayAverage'] if 'twoHundredDayAverage' in ticker_data.info else None,
                 "price_change": round(ticker_data.info['regularMarketPrice'] - ticker_data.info['previousClose'], 2),
-                "price_change_percent": round((ticker_data.info['regularMarketPrice'] - ticker_data.info['previousClose']) / ticker_data.info['previousClose'] * 100, 3)
+                "price_change_percent": round((ticker_data.info['regularMarketPrice'] - ticker_data.info['previousClose']) / ticker_data.info['previousClose'] * 100, 3),
+                "52wkLow": ticker_data.info['fiftyTwoWeekLow'] if 'fiftyTwoWeekLow' in ticker_data.info else None,
+                "52wkHigh": ticker_data.info['fiftyTwoWeekHigh'] if 'fiftyTwoWeekHigh' in ticker_data.info else None,
+                "allTimeHigh": ticker_data.info['allTimeHigh'] if 'allTimeHigh' in ticker_data.info else None,
+                "allTimeLow": ticker_data.info['allTimeLow'] if 'allTimeLow' in ticker_data.info else None,
+                "targetHighPrice": ticker_data.info['targetHighPrice'] if 'targetHighPrice' in ticker_data.info else None,
+                "targetLowPrice": ticker_data.info['targetLowPrice'] if 'targetLowPrice' in ticker_data.info else None,
+                "targetMeanPrice": ticker_data.info['targetMeanPrice'] if 'targetMeanPrice  ' in ticker_data.info else None,
+                "targetMedianPrice": ticker_data.info['targetMedianPrice'] if 'targetMedianPrice' in ticker_data.info else None
               }
         except Exception as e:
             logger.error(f"Error fetching statistics for ticker {ticker}: {e}")

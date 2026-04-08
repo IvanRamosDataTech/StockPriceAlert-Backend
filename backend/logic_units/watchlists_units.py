@@ -124,7 +124,7 @@ def add_asset_to_watchlist(watchlist_id: int, ticker: str) -> dict:
 			raise ValueError(f"Asset with ticker '{ticker}' is already in the watchlist")
 
 		if not asset:
-			asset_data = FinancialDataService.get_ticker_statistics(
+			asset_data = FinancialDataService.get_ticker_info(
 				ticker, period="1mo", interval="1d"
 			)
 			asset = Asset(

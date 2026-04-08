@@ -16,6 +16,7 @@ def _help_command(args):
         "Available commands:\n"
         "/help - Show this help message\n"
         "/search {query} - Searches for assets matching with given term. \n"
+        "/info {ticker} {period} {interval} - Returns detailed information for a given asset ticker. Optionally provide a period and interval.\n"
         "/ex_rate - Returns the latest exchange rate for USD/MXN.\n"
         "/convert {amount} - Converts a given amount from USD to MXN using the latest exchange rate. E.g. /convert 100\n"
         "/prices {ticker1 ticker2 ...} - Returns the latest prices for a list of asset tickers. Asset tickers should be provided as space separated values.\n"
@@ -37,7 +38,7 @@ def _search_command(args):
         if len(args) == 0:
             TelegramService.send_message(current_app, "Please provide a search term after the /search command.")
             return
-        
+
         query = " ".join(args)
         search_results = FinancialDataService.search_tickers(query,maximum_results=7)
 
@@ -48,6 +49,33 @@ def _search_command(args):
     except Exception as e:
         logger.error(f"Error processing search command: {e}")
         TelegramService.send_message(current_app, f"Error processing search command: {e}")
+        return
+    
+def _info_command(args):
+    try:
+        if len(args) == 0:
+            TelegramService.send_message(current_app, "Please provide an asset ticker. E.G /info LLY.")
+            return
+        
+        period = "1mo"
+        interval = "1d"
+        
+        if len(args) == 3:
+            period = args[1]
+            interval = args[2]
+        
+        ticker = args[0].strip().upper()
+        info = FinancialDataService.get_ticker_info(ticker, period, interval)
+        output = f"{info['ticker']}  {info['displayed_name']}:\n\n"
+        output += f"General Info\nSector: {info['sector']}\nIndustry: {info['industry']}\n\n"
+        output += f"Volume Statistics\nVolume: {info['volume']}\nAverage Volume: {info['averageVolume']}\nAverage Volume (10 days): {info['averageVolume10days']}\nAverage Daily Volume (10 days): {info['averageDailyVolume10Day']}\n\n"
+        output += f"Bid: {info['bid']} USD\nBid Size: {info['bidSize']}\nAsk: {info['ask']} USD\nAsk Size: {info['askSize']}\n\n"
+        output += f"Price In Period {period} {interval}:\nPrevious Price: {info['previous_price']} USD\nCurrent Price: {info['current_price']} USD\nPrice Change: {info['price_change']} USD ({info['price_change_percent']}%)\nMin Price in Period: {info['min_price_in_period']} USD\nMax Price in Period: {info['max_price_in_period']} USD\nAverage Price in Period: {info['avg_price_in_period']} USD\n\n"
+        output += f"Price Statistics\n50 Day Average: {info['50DayAverage']} USD\n200 Day Average: {info['200DayAverage']} USD\n52 Week Low: {info['52wkLow']} USD\n52 Week High: {info['52wkHigh']} USD\nAll Time High: {info['allTimeHigh']} USD\nAll Time Low: {info['allTimeLow']} USD\nTarget High Price: {info['targetHighPrice']} USD\nTarget Low Price: {info['targetLowPrice']} USD\nTarget Mean Price: {info['targetMeanPrice']} USD\nTarget Median Price: {info['targetMedianPrice']} USD"
+        TelegramService.send_message(current_app, output)
+    except Exception as e:
+        logger.error(f"Error processing info command: {e}")
+        TelegramService.send_message(current_app, f"Error processing info command: {e}")
         return
     
 def _exchange_rate_command(args):
@@ -312,6 +340,7 @@ def _process_command(command):
     switcher = {
         "/help": _help_command,
         "/search": _search_command,
+        "/info": _info_command,
         "/ex_rate": _exchange_rate_command,
         "/convert": _convert_command,
         "/prices": _prices_command,
