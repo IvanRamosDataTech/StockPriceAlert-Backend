@@ -154,7 +154,7 @@ def remove_asset_from_watchlist(watchlist_id: int, ticker: str) -> dict:
 
 		asset = session.query(Asset).filter_by(ticker=ticker).first()
 		if not asset or asset not in watchlist.assets:
-			raise LookupError(f"Asset with ticker '{ticker}' is not in the watchlist")
+			raise LookupError(f'Asset with ticker "{ticker}" is not in "{watchlist.name}".')
 
 		watchlist.assets.remove(asset)
 		if len(asset.watchlists) == 0:
