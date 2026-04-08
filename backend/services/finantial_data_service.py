@@ -120,6 +120,7 @@ class FinancialDataService:
                "displayed_name": ticker_data.info['shortName'],
                "sector": ticker_data.info['sector'] if 'sector' in ticker_data.info else None,
                "industry": ticker_data.info['industry'] if 'industry' in ticker_data.info else None,
+               "currency": ticker_data.info['currency'] if 'currency' in ticker_data.info else "",
                 ## Volume statistics
                 'volume': ticker_data.info['volume'] if 'volume' in ticker_data.info else None,
                 'averageVolume': ticker_data.info['averageVolume'] if 'averageVolume' in ticker_data.info else None,
