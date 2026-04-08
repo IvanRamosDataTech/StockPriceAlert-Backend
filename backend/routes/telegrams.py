@@ -20,7 +20,7 @@ def _help_command(args):
         "/convert {amount} - Converts a given amount from USD to MXN using the latest exchange rate. E.g. /convert 100\n"
         "/prices {ticker1 ticker2 ...} - Returns the latest prices for a list of asset tickers. Asset tickers should be provided as space separated values.\n"
         "/watchlists {watchlist_name} - Returns all user's watchlists. Optionally, can provide a name to filter.\n"
-        "/watchlist_new {watchlist_id} - Creates a new watchlist with the given name.\n"
+        "/watchlist_new {watchlist_name} - Creates a new watchlist with the given name.\n"
         "/watchlist_add {watchlist_id} {asset_ticker} - Adds an asset to a watchlist.\n"
         "/watchlist_remove {watchlist_id} {asset_ticker} - Removes an asset from a watchlist.\n"
         "/watchlist_delete {watchlist_id} - Deletes a watchlist.\n"
@@ -112,7 +112,21 @@ def _watchlists_command(args):
     try:
         name_filter = " ".join(args) if len(args) > 0 else None
         watchlists = fetch_watchlists(name_filter)
-        TelegramService.send_message(current_app, watchlists)
+        output = ""
+        if len(watchlists) == 0:
+            output = "You don't have any watchlists yet. You can create one with /watchlist_new {watchlist_name}"
+        else:
+            for watchlist in watchlists:    
+                output += f'"{watchlist['name']}" (id: {watchlist['id']}):\n'
+                if len(watchlist["assets"]) == 0:
+                    output += "  Empty\n\n"
+                else:
+                    for asset in watchlist["assets"]:
+                        output += f"  - {asset['ticker']}  {asset['price']}   {asset['change %']}%\n    {asset['displayed_name']}\n"
+                    
+                output += "\n"
+            
+        TelegramService.send_message(current_app, output)
     except Exception as e:
         logger.error(f"Error processing watchlists command: {e}")
         TelegramService.send_message(current_app, f"Error processing watchlists command: {e}")
