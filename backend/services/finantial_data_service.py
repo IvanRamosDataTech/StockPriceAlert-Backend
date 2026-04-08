@@ -91,6 +91,7 @@ class FinancialDataService:
         statistics = {}
         for ticker, group in prices_in_period:
             statistics[ticker] = {
+                    "previous_price": round(group["Close"].iloc[-1], 2),
                     "minimum": round(group["Low"].min(), 2),
                     "maximum": round(group["High"].max(), 2),
                     "average": round(group["Close"].mean(), 2),
@@ -116,13 +117,13 @@ class FinancialDataService:
             recent_history = ticker_data.history(period=period, interval=interval)
             return { "ticker": ticker_data.ticker,
                "displayed_name": ticker_data.info['shortName'],
-               "previous_price": ticker_data.info['open'],
+               "previous_price": ticker_data.info['previousClose'],
                 "current_price": ticker_data.info['regularMarketPrice'],
                 "min_price_in_period": round(recent_history["Low"].min(), 2),
                 "max_price_in_period": round(recent_history["High"].max(), 2),
                 "avg_price_in_period": round(recent_history["Close"].mean(), 2),
-                "price_change": round(ticker_data.info['regularMarketPrice'] - ticker_data.info['open'], 2),
-                "price_change_percent": round((ticker_data.info['regularMarketPrice'] - ticker_data.info['open']) / ticker_data.info['open'] * 100, 3)
+                "price_change": round(ticker_data.info['regularMarketPrice'] - ticker_data.info['previousClose'], 2),
+                "price_change_percent": round((ticker_data.info['regularMarketPrice'] - ticker_data.info['previousClose']) / ticker_data.info['previousClose'] * 100, 3)
               }
         except Exception as e:
             logger.error(f"Error fetching statistics for ticker {ticker}: {e}")

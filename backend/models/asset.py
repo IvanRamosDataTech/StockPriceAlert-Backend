@@ -26,7 +26,6 @@ class Asset(db.Model):
     updated_at = db.Column(db.DateTime, nullable=False, default=now_cts_time, onupdate=now_cts_time)
 
     def update_price_statistics(self, latest_price):
-        self.previous_price = self.price
         self.price = latest_price
         self.price_change = round(self.price - self.previous_price, 2)
         self.price_change_percent = round((self.price_change / self.previous_price) * 100, 2) if self.previous_price else 0.0
