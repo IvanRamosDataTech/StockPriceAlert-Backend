@@ -35,7 +35,16 @@ def fetch_alerts(asset_ticker: Optional[str] = None) -> Dict[str, List[str] | st
         alerts = Alert.query.all()
         message = "All alerts registered in system"
 
-    return {"message": message, "alerts": [str(alert) for alert in alerts]}
+    return {"message": message, "alerts": [
+						{
+							"id": alert.id,
+                            "ticker": alert.ticker,
+							"type": alert.alert_type,
+							"threshold": alert.price_threshold,
+                            "triggered_at": alert.last_triggered_at.isoformat() if alert.last_triggered_at else None,
+						}
+						for alert in alerts
+					]}
 
 
 def create_alert(ticker: str, alert_type: str, target_price: Optional[float]) -> dict:

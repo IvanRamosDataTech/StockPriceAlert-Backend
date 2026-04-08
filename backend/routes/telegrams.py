@@ -217,8 +217,22 @@ def _watchlist_delete_command(args):
 def _alerts_command(args):
     try:
         ticker = args[0] if len(args) > 0 else None
-        alerts = fetch_alerts(ticker)
-        TelegramService.send_message(current_app, alerts)
+        message = fetch_alerts(ticker)
+        output = ""
+        if len(message['alerts']) == 0:
+            output = "You don't have any alerts yet.\nYou can create one with /alert_set {asset_ticker} {alert_type} {target_price}"
+        else:
+            output = f"{message['message']}:\n\n"
+            for alert in message['alerts']:
+                output += f"{alert['id']} - {alert['ticker']} - {alert['type']}"
+                if alert['threshold'] is not None:
+                    output += f" {alert['threshold']} "
+                if alert['triggered_at']:
+                    output += f"(last triggered at: {alert['triggered_at']})"
+                output += "\n"
+
+        TelegramService.send_message(current_app, output)
+        # TelegramService.send_message(current_app, message)
     except LookupError as le:   
         logger.error(f"Error fetching alerts: {le}")
         TelegramService.send_message(current_app, f"Error fetching alerts: {le}")
