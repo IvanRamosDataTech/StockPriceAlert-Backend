@@ -1,7 +1,10 @@
 from flask import Blueprint, request, jsonify
-from ..models.alert import Alert
-from ..models.asset import Asset
-from ..persistance.db_manager import get_db_session
+from ..logic_units.alerts_units import (
+    create_alert,
+    delete_alert,
+    fetch_alerts,
+    update_alert as update_alert_logic,
+)
 
 import logging
 
@@ -17,19 +20,14 @@ def get_alerts():
     query parameters: stock (optional) - ticker symbol to filter alerts by stock
     """
     logger.info("/api/alerts route called")
-    
+
     stock = request.args.get('stock', None)
     try:
-        if stock:        
-            asset = Asset.query.filter_by(ticker=stock).first()
-            if not asset:
-                return jsonify({"error": f"No asset found with ticker {stock} in any of your watchlists"}), 404
-            else:
-                alerts = asset.alerts
-                return jsonify({"message": f"All alerts registered for {stock}", "alerts": [str(alert) for alert in alerts]})
-        else:
-            alerts = Alert.query.all()
-            return jsonify({"message": "All alerts registered in system", "alerts": [str(alert) for alert in alerts]})
+        payload = fetch_alerts(stock)
+        return jsonify(payload), 200
+    except LookupError as le:
+        logger.error(f"Error fetching alerts: {le}")
+        return jsonify({"error": str(le)}), 404
     except Exception as e:
         logger.error(f"Error fetching alerts: {e}")
         return jsonify({"error": "Failed to fetch alerts"}), 500
@@ -61,23 +59,15 @@ def set_alert():
     if not isinstance(target_price, (int, float)) and target_price is not None:
         return jsonify({"error": "target_price must be a number"}), 400
 
-
-    if alert_type not in ["MonthMinimum", "MonthMaximum", "PriceBelow", "PriceAbove"]:
-        return jsonify({"error": "Invalid alert_type. Accepted values are: MonthMinimum, MonthMaximum, PriceBelow, PriceAbove"}), 400
-
-    if alert_type in ["PriceBelow", "PriceAbove"] and target_price is None:
-        return jsonify({"error": "target_price is required for PriceBelow and PriceAbove alert types"}), 400
-    
-
     try:
-        with get_db_session() as session:
-            asset = Asset.query.filter_by(ticker=ticker).first()
-            if not asset:
-                return jsonify({"error": f"No asset found with ticker {ticker} in any of your watchlists"}), 404
-            
-            new_alert = Alert(ticker=ticker, alert_type=alert_type, price_threshold=target_price)
-            session.add(new_alert)
-            return jsonify({"message": "Alert created successfully", "stock": str(asset)}), 201
+        payload = create_alert(ticker, alert_type, target_price)
+        return jsonify(payload), 201
+    except LookupError as le:
+        logger.error(f"Error creating alert: {le}")
+        return jsonify({"error": str(le)}), 404
+    except ValueError as ve:
+        logger.error(f"Error creating alert: {ve}")
+        return jsonify({"error": str(ve)}), 400
     except Exception as e:
         logger.error(f"Error creating alert: {e}")
         return jsonify({"error": "Failed to create alert"}), 500
@@ -91,13 +81,11 @@ def unset_alert(alert_id):
     logger.info(f"/api/alerts/{alert_id} DELETE route called")
     
     try:
-        with get_db_session() as session:
-            alert = Alert.query.get(alert_id)
-            if not alert:
-                return jsonify({"error": f"No alert found with ID {alert_id}"}), 404
-    
-            session.delete(alert)
-            return jsonify({"message": f"Alert {alert.alert_type} {alert.price_threshold if alert.price_threshold is not None else ''} for asset {alert.asset.ticker} successfully deleted"})
+        payload = delete_alert(alert_id)
+        return jsonify(payload), 200
+    except LookupError as le:
+        logger.error(f"Error deleting alert: {le}")
+        return jsonify({"error": str(le)}), 404
     except Exception as e:
         logger.error(f"Error deleting alert: {e}")
         return jsonify({"error": "Failed to delete alert"}), 500
@@ -125,23 +113,16 @@ def update_alert(alert_id):
     
     if not isinstance(target_price, (int, float)) and target_price is not None:
         return jsonify({"error": "target_price must be a number"}), 400
-
-    if alert_type not in ["MonthMinimum", "MonthMaximum", "PriceBelow", "PriceAbove"]:
-        return jsonify({"error": "Invalid alert_type. Accepted values are: MonthMinimum, MonthMaximum, PriceBelow, PriceAbove"}), 400
-
-    if alert_type in ["PriceBelow", "PriceAbove"] and target_price is None:
-        return jsonify({"error": "target_price is required for PriceBelow and PriceAbove alert types"}), 400
     
     try:
-        with get_db_session() as session:
-            alert = Alert.query.get(alert_id)
-            if not alert:
-                return jsonify({"error": f"No alert found with ID {alert_id}"}), 404
-            
-            alert.alert_type = alert_type
-            alert.price_threshold = target_price
-            session.add(alert)
-            return jsonify({"message": f"Alert {alert.alert_type} {alert.price_threshold if alert.price_threshold is not None else ''} for asset {alert.asset.ticker} updated successfully"})
+        payload = update_alert_logic(alert_id, alert_type, target_price)
+        return jsonify(payload), 200
+    except LookupError as le:
+        logger.error(f"Error updating alert: {le}")
+        return jsonify({"error": str(le)}), 404
+    except ValueError as ve:
+        logger.error(f"Error updating alert: {ve}")
+        return jsonify({"error": str(ve)}), 400
     except Exception as e:
         logger.error(f"Error updating alert: {e}")
         return jsonify({"error": "Failed to update alert"}), 500

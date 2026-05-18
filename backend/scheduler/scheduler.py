@@ -4,8 +4,7 @@ import os
 
 from apscheduler.schedulers.background import BackgroundScheduler
 
-from datetime import datetime
-import time
+from ..utils.time_utils import GMT_MINUS_6, now_cts_time
 from .price_updater_job import update_prices_and_alerts
 from .history_fetcher_job import update_monthly_stats
 from .experimental.telegram_messages_job import send_test_telegram_message
@@ -32,7 +31,6 @@ def start_scheduler(app):
         return None
 
     last_prices_minutes = int(app.config.get("LAST_PRICES_FETCH_INTERVAL", 15))
-    history_minutes = int(app.config.get("HISTORICAL_FETCH_INTERVAL", 1440))
 
     scheduler = BackgroundScheduler()
     
@@ -108,21 +106,31 @@ def start_scheduler(app):
         replace_existing=True,
     )
 
+    #runs when markets close in Mexico 
     scheduler.add_job(
         func=update_monthly_stats,
-        trigger="interval",
-        minutes=history_minutes,
+        trigger="cron",
+        hour=15,
+        minute=30,
+        timezone=GMT_MINUS_6,
         args=[app],
         id="historical_fetch",
+        replace_existing=True,
+    )
+
+    scheduler.add_job(
+        func=update_monthly_stats,
+        trigger="date",
+        run_date=now_cts_time(),
+        args=[app],
+        id="historical_fetch_on_boot",
         replace_existing=True,
     )
 
     scheduler.start()
     _scheduler = scheduler
     logger.info(
-        "Scheduler started with intervals (minutes): last_prices=%s, history=%s",
-        #"Scheduler started in test mode with intervals (seconds): last_prices=%s, history=%s",
+        "Scheduler started: last_prices every %s minutes, historical_fetch now on boot and daily at 15:30 CTS",
         last_prices_minutes,
-        history_minutes,
     )
     return scheduler

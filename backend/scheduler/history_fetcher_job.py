@@ -19,6 +19,7 @@ def update_monthly_stats(app):
 				statistics = FinancialDataService.statistics_in_period(tickers, period="1mo", interval="1d")
 				for asset in assets:
 					if asset.ticker in statistics:
+						asset.previous_price = statistics[asset.ticker]["previous_price"]
 						asset.min_month_price = statistics[asset.ticker]["minimum"]
 						asset.max_month_price = statistics[asset.ticker]["maximum"]
 						asset.avg_month_price = statistics[asset.ticker]["average"]

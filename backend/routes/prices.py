@@ -19,13 +19,14 @@ def get_latest_prices():
     
     tickers = request.args.get('tickers', '')
     ticker_list = [ticker.strip() for ticker in tickers.split(',') if ticker.strip()]
+    exchange=request.args.get('conversion', 'USD/MXN')
     
     if not ticker_list:
         return jsonify({"error": "No tickers provided"}), 400
     
     try:
-        logger.info(f"Fetching latest prices for tickers: {ticker_list}")
-        return jsonify(FinancialDataService.latest_prices(ticker_list))
+        logger.info(f"Fetching latest prices for tickers: {ticker_list} with conversion: {exchange}")
+        return jsonify(FinancialDataService.latest_prices(ticker_list, conversion=exchange))
     except Exception as e:
         logger.error(f"Error fetching prices for tickers {ticker_list}: {e}")
         return jsonify({"error": "Failed to fetch prices"}), 500
@@ -109,3 +110,35 @@ def get_search_tickers():
     except Exception as e:
         logger.error(f"Error searching for tickers with query '{query}': {e}")
         return jsonify({"error": "Failed to search for tickers"}), 500
+    
+@price_blueprint.route('/info', methods=['GET'])
+def get_ticker_info():
+    """
+    Endpoint to get detailed information for a given ticker
+    
+    [period] The period to fetch historical data. Valid periods: 1d,5d,1mo,3mo,6mo,1y,2y,5y,10y,ytd,max Default is 1mo
+    [interval] The interval for historical data.  Valid intervals: 1m,2m,5m,15m,30m,60m,90m,1h,1d,5d,1wk,1mo,3mo Intraday data cannot extend last 60 days
+    
+    [ticker] should be provided as a string in the query parameters, e.g.:
+    /api/prices/info?ticker=AAPL
+
+
+    """
+    logger.info("/api/prices/info route called")
+    
+    ticker = request.args.get('ticker', '')
+    period = request.args.get('period', '1mo')
+    interval = request.args.get('interval', '1d')
+    
+    if not ticker:
+        return jsonify({"error": "No ticker provided"}), 400
+    
+    try:
+        info = FinancialDataService.get_ticker_info(ticker, period=period, interval=interval)
+        if info:
+            return jsonify(info)
+        else:
+            return jsonify({"error": "Information not found for the given ticker"}), 404
+    except Exception as e:
+        logger.error(f"Error fetching information for ticker '{ticker}': {e}")
+        return jsonify({"error": "Failed to fetch ticker information"}), 500

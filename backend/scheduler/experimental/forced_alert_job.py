@@ -19,7 +19,8 @@ def updated_price_send_alert(app):
                 prices = FinancialDataService.latest_prices(tickers)
                 
                 for asset in assets:
-                    asset.update_price_statistics(prices.get(asset.ticker, asset.price))
+                    latest_price = prices.get(asset.ticker)
+                    asset.update_price_statistics(latest_price.get('original_price'))
                     price_change_message += f"{asset.ticker}: ${(asset.price):.2f},  change {(asset.price_change):.2f}, {(asset.price_change_percent):.2f}% \n"
                 
                 if TelegramService.send_message(app, price_change_message):
