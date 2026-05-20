@@ -6,6 +6,7 @@ from backend.routes.watchlists import watchlist_blueprint
 from backend.routes.alerts import alerts_blueprint
 from backend.routes.telegrams import telegrams_blueprint
 from backend.scheduler.scheduler import start_scheduler
+from dotenv import load_dotenv
 import logging
 import os
 import time
@@ -13,6 +14,9 @@ import time
 print("Loading backend package ...")
 
 def create_app():
+    # Load .env for local development; no-op in production where Render injects env vars directly.
+    load_dotenv()
+
     flask_app = Flask(__name__)
     flask_app.config.setdefault("APP_TIMEZONE", "Etc/GMT+6")
 

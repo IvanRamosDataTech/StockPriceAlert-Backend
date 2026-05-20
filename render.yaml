@@ -1,0 +1,33 @@
+services:
+  - type: web
+    name: stock-price-alert-backend
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn "backend:create_app()" --workers=1 --threads=4 --bind 0.0.0.0:$PORT
+    envVars:
+      - key: FLASK_APP
+        value: backend
+      - key: FLASK_APP_VERSION
+        value: 0.1.0
+      - key: FLASK_DEBUG
+        value: false
+      - key: FLASK_ENV
+        value: production
+      - key: FLASK_SQLALCHEMY_DATABASE_URI
+        #value: sqlite:////data/stockalert.db   # absolute path to the Persistent Disk mount
+        value: sqlite:///stockalert.db   # local SQLite database (relative path)
+      - key: FLASK_LAST_PRICES_FETCH_INTERVAL
+        value: "15"
+      - key: FLASK_FRONTEND_URL
+        value: https://your-frontend-url.com   # update once frontend is deployed
+      - key: FLASK_TELEGRAM_BOT_TOKEN
+        sync: false   # set manually in Render dashboard — do not commit this value
+      - key: FLASK_TELEGRAM_CHAT_ID
+        sync: false   # set manually in Render dashboard — do not commit this value
+    # Persistent Disk keeps SQLite data across deploys.
+    # Available on Starter plan and above (~$0.25/GB/month).
+    # Remove this section if you accept data loss on each redeploy (PoC-only).
+    # disk:
+    #   name: stockalert-data
+    #   mountPath: /data
+    #   sizeGB: 1
