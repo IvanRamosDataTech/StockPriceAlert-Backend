@@ -2,6 +2,7 @@ import logging
 
 from ..models.asset import Asset
 from ..persistance.db_manager import get_db_session
+from ..persistance.db_utils import is_db_empty
 from ..services.finantial_data_service import FinancialDataService
 from ..services.alert_service import AlertService
 
@@ -16,6 +17,10 @@ def update_prices_and_alerts(app):
 	with app.app_context():
 		try:
 			with get_db_session() as session:
+				if is_db_empty():
+					logger.info("Database is empty, skipping price update.")
+					return
+
 				assets = session.query(Asset).all()
 				tickers = [asset.ticker for asset in assets]
 				prices = FinancialDataService.latest_prices(tickers)
