@@ -8,48 +8,60 @@ from backend.models.watchlist import Watchlist
 from backend.persistance.db_manager import db
 from backend.utils.time_utils import now_cts_time
 
-
 def populate_database():
     # Add some assets for testing
-    # spym = Asset(ticker="SPYM", price=0.00, previous_price=0.00, displayed_name="SPDR S&P 500 ETF Trust", price_change=0.0, price_change_percent=0.0, min_month_price=0.00)
-    # vgk = Asset(ticker="VGK", price=0.00, previous_price=0.00, displayed_name="Vanguard FTSE Europe ETF", price_change=0.0, price_change_percent=0.0, min_month_price=0.00) 
-    # vwo = Asset(ticker="VWO", price=0.00, previous_price=0.00, displayed_name="Vanguard FTSE Emerging Markets ETF", price_change=0.0, price_change_percent=0.0, min_month_price=0.00)   
-    # vapu = Asset(ticker="VAPU.L", price=0.00, previous_price=0.00, displayed_name="Vanguard FTSE All-World ex-US ETF", price_change=0.0, price_change_percent=0.0, min_month_price=0.00)    
-    
+    apple = Asset(ticker="AAPL", price=150.00, previous_price=150.00, displayed_name="Apple Inc.")
+    amazon = Asset(ticker="AMZN", price=3305.00, previous_price=3305.00, displayed_name="Amazon.com Inc.")
+    chevron = Asset(ticker="CVX", price=98.20, previous_price=98.20, displayed_name="Chevron Corporation", price_change=0.5, price_change_percent=0.5, min_month_price=95.00)
+    robo = Asset(ticker="ROBO", price=123.69, previous_price=123.69, displayed_name="ROBO Global Robotics and Automation Index ETF", price_change=-2.0, price_change_percent=-1.6, min_month_price=120.00)
+    ihya = Asset(ticker="IHYA.L", price=45.67, previous_price=45.67, displayed_name="iShares iBoxx $ High Yield Corporate Bond ETF", price_change=-0.2, price_change_percent=-0.4, min_month_price=44.00)
+    trade_desk = Asset(ticker="TTD", price=85.00, previous_price=85.00, displayed_name="The Trade Desk Inc.", price_change=1.0, price_change_percent=1.2, min_month_price=80.00)
+    microstrategy = Asset(ticker="MSTR", price=250.00, previous_price=250.00, displayed_name="MicroStrategy Incorporated", price_change=-5.0, price_change_percent=-2.0, min_month_price=240.00)
+
     # Add some alerts for testing
-    # spym_alert = Alert(asset_ticker="SPYM", alert_type=ALERT_TYPE_MONTH_LOW)
-    # vgk_alert = Alert(asset_ticker="VGK", alert_type=ALERT_TYPE_MONTH_LOW)
-    # vwo_alert = Alert(asset_ticker="VWO", alert_type=ALERT_TYPE_MONTH_LOW)
-    # vapu_alert = Alert(asset_ticker="VAPU.L", alert_type=ALERT_TYPE_MONTH_LOW)
+    apple_alert = Alert(ticker="AAPL", price_threshold=129.00, alert_type=ALERT_TYPE_PRICE_BELOW)
+    chevron_alert = Alert(ticker="CVX", price_threshold=175.00, alert_type=ALERT_TYPE_PRICE_ABOVE)
+    chevron_alert2 = Alert(ticker="CVX", price_threshold=200.00, alert_type=ALERT_TYPE_PRICE_ABOVE)
+    ihya_alert = Alert(ticker="IHYA.L", price_threshold=44.9, alert_type=ALERT_TYPE_PRICE_BELOW)
+    robo_alert = Alert(ticker="ROBO", price_threshold=None, alert_type=ALERT_TYPE_MONTH_LOW)
+    robo_alert_2 = Alert(ticker="ROBO", price_threshold=115.00, alert_type=ALERT_TYPE_PRICE_BELOW)
+    robo_alert_3 = Alert(ticker="ROBO", price_threshold=90.00, alert_type=ALERT_TYPE_PRICE_BELOW)
+    mstr_alert = Alert(ticker="MSTR", price_threshold=None, alert_type=ALERT_TYPE_MONTH_LOW)
 
-
-    # db.session.add_all([spym])
-    # db.session.add_all([spym_alert])
+    db.session.add_all([apple, amazon, chevron, robo, ihya, trade_desk, microstrategy])
+    db.session.add_all([apple_alert, chevron_alert, chevron_alert2, ihya_alert, robo_alert, robo_alert_2, robo_alert_3, mstr_alert])
 
     # Add some watchlists for testing
-    # indexed_list = Watchlist(name="Indexed ETFs")
+    hot_strategy = Watchlist(name="Hot stocks")
+    apple = Asset.query.filter_by(ticker="AAPL").first()
+    amazon = Asset.query.filter_by(ticker="AMZN").first()
+    chevron = Asset.query.filter_by(ticker="CVX").first()
 
-    # indexed_list.assets.append(spym)
-    # indexed_list.assets.append(vgk)
-    # indexed_list.assets.append(vwo)
-    # indexed_list.assets.append(vapu)
-    # if trade_desk:
-    #     indexed_list.assets.append(trade_desk)
+    if apple:
+        hot_strategy.assets.append(apple)
+    if amazon:
+        hot_strategy.assets.append(amazon)
+    if chevron:
+        hot_strategy.assets.append(chevron)
+    if microstrategy:
+        hot_strategy.assets.append(microstrategy)
+    if trade_desk:
+        hot_strategy.assets.append(trade_desk)
     
-    # long_strategy = Watchlist(name="Long term holds")
-    # ihya = Asset.query.filter_by(ticker="IHYA.L").first()
-    # robo = Asset.query.filter_by(ticker="ROBO").first()
-    # if robo:
-    #     long_strategy.assets.append(robo)
-    # if ihya:
-    #     long_strategy.assets.append(ihya)
+    long_strategy = Watchlist(name="Long term holds")
+    ihya = Asset.query.filter_by(ticker="IHYA.L").first()
+    robo = Asset.query.filter_by(ticker="ROBO").first()
+    if robo:
+        long_strategy.assets.append(robo)
+    if ihya:
+        long_strategy.assets.append(ihya)
 
-    # alternatives = Watchlist(name="Alternatives")
-    # alternatives.assets.append(microstrategy)
+    alternatives = Watchlist(name="Alternatives")
+    alternatives.assets.append(microstrategy)
 
-    # db.session.add(indexed_list)
-    # db.session.add(long_strategy)
-    # db.session.add(alternatives)
+    db.session.add(hot_strategy)
+    db.session.add(long_strategy)
+    db.session.add(alternatives)
     
     db.session.commit()
 

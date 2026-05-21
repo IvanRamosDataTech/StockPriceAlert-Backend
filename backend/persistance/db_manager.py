@@ -7,8 +7,11 @@ def init_db(app):
     """Initialize database with Flask app"""
     db.init_app(app)
     with app.app_context():
-        from backend.models import asset, alert, watchlist
+        from .db_utils import is_db_empty, populate_database
         db.create_all()
+        if is_db_empty():
+            print("Seeding default data...")
+            populate_database()
         print("✓ Database initialized")
 
 @contextmanager
