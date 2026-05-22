@@ -13,7 +13,7 @@ from ..services.finantial_data_service import FinancialDataService
 logger = logging.getLogger(__name__)
 
 
-def fetch_watchlists(name_filter: Optional[str] = None) -> List[dict]:
+def fetch_watchlists(name_filter: Optional[str] = None) -> tuple[List[dict], Optional[str]]:
 	"""Return serialized watchlists with optional case-insensitive name filtering."""
 	if name_filter:
 		watchlists = (
@@ -23,6 +23,7 @@ def fetch_watchlists(name_filter: Optional[str] = None) -> List[dict]:
 		watchlists = Watchlist.query.all()
 
 	watchlists_data: List[dict] = []
+	last_updated = None
 	for watchlist in watchlists:
 		assets_in_watchlist = []
 		for asset in watchlist.assets:
@@ -43,16 +44,17 @@ def fetch_watchlists(name_filter: Optional[str] = None) -> List[dict]:
 					],
 				}
 			)
+			last_updated = asset.updated_at
 
 		watchlists_data.append(
 			{
 				"id": watchlist.id,
 				"name": watchlist.name,
-				"assets": assets_in_watchlist,
+				"assets": assets_in_watchlist
 			}
 		)
 
-	return watchlists_data
+	return watchlists_data, last_updated
 
 
 def new_watchlist(name: str) -> tuple[int, str]:

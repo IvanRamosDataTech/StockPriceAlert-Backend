@@ -139,7 +139,7 @@ def _prices_command(args):
 def _watchlists_command(args):
     try:
         name_filter = " ".join(args) if len(args) > 0 else None
-        watchlists = fetch_watchlists(name_filter)
+        watchlists, last_updated = fetch_watchlists(name_filter)
         output = ""
         if len(watchlists) == 0:
             output = "You don't have any watchlists yet. You can create one with /watchlist_new {watchlist_name}"
@@ -151,7 +151,7 @@ def _watchlists_command(args):
                 else:
                     for asset in watchlist["assets"]:
                         output += f"  - {asset['ticker']}  {asset['price']}   {asset['change %']}%\n    {asset['displayed_name']}\n"
-                    
+                    output += f"\nLast sync: {last_updated}\n"
                 output += "\n"
             
         TelegramService.send_message(current_app, output)
