@@ -9,6 +9,64 @@ from backend.persistance.db_manager import db
 from backend.utils.time_utils import now_cts_time
 
 def populate_database():
+    spym = Asset(ticker="SPYM", price=0.00, previous_price=0.00, displayed_name="SPDR Portfolio S&P 500 Growth ETF")
+    vgk = Asset(ticker="VGK", price=0.00, previous_price=0.00, displayed_name="Vanguard FTSE Europe ETF")
+    vwo = Asset(ticker="VWO", price=0.00, previous_price=0.00, displayed_name="Vanguard FTSE Emerging Markets ETF")
+    vapu = Asset(ticker="VAPU.L", price=0.00, previous_price=0.00, displayed_name="Vanguard FTSE Developed Asia ex Japan ETF")
+    indexed_strategy = Watchlist(name="Indexed")
+    indexed_strategy.assets.extend([spym, vgk, vwo, vapu])
+    db.session.add_all([spym, vgk, vwo, vapu, indexed_strategy])
+
+    cbu7 = Asset(ticker="CBU7.L", price=0.00, previous_price=0.00, displayed_name="iShares USD TRSRY ETF")
+    ihya = Asset(ticker="IHYA.L", price=0.00, previous_price=0.00, displayed_name="iShares iBoxx $ High Yield Corporate Bond ETF")
+    jpea = Asset(ticker="JPEA.L", price=0.00, previous_price=0.00, displayed_name="iShares J.P. Morgan $ EM Corp Bond ETF")
+    vdca = Asset(ticker="VDCA.L", price=0.00, previous_price=0.00, displayed_name="Vanguard USD Short-Term Corporate Bond ETF")
+    vdst = Asset(ticker="VDST.L", price=0.00, previous_price=0.00, displayed_name="Vanguard Short-Term Treasury Bond ETF")
+    bonds_strategy = Watchlist(name="Bonds")
+    bonds_strategy.assets.extend([cbu7, ihya, jpea, vdca, vdst])
+    db.session.add_all([cbu7, ihya, jpea, vdca, vdst, bonds_strategy])
+
+    aged = Asset(ticker="AGED.L", price=0.00, previous_price=0.00, displayed_name="iShares Ageing Population UCITS ETF")
+    fragua = Asset(ticker="FRAGUAB.MX", price=0.00, previous_price=0.00, displayed_name="Grupo Fragua SAB de CV")
+    se = Asset(ticker="SE", price=0.00, previous_price=0.00, displayed_name="Sea Limited")
+    patrimonial = Watchlist(name="Patrimonial")
+    patrimonial.assets.extend([aged, fragua, se])
+    db.session.add_all([aged, fragua, se, patrimonial])
+
+    ewc = Asset(ticker="EWC", price=0.00, previous_price=0.00, displayed_name="iShares MSCI Canada ETF")
+    ewz = Asset(ticker="EWZ", price=0.00, previous_price=0.00, displayed_name="iShares MSCI Brazil ETF")
+    inda = Asset(ticker="INDA", price=0.00, previous_price=0.00, displayed_name="iShares MSCI India ETF")
+    mchi = Asset(ticker="MCHI", price=0.00, previous_price=0.00, displayed_name="iShares MSCI China ETF")
+    naftrac = Asset(ticker="NAFTRACISHRS.MX", price=0.00, previous_price=0.00, displayed_name="Nacional Financiera MX")
+    satelites = Watchlist(name="Satelites")
+    satelites.assets.extend([ewc, ewz, inda, mchi, naftrac])
+    db.session.add_all([ewc, ewz, inda, mchi, naftrac, satelites])
+
+    bitcoin = Asset(ticker="BTC-USD", price=0.00, previous_price=0.00, displayed_name="Bitcoin USD")
+    gold = Asset(ticker="GC=F", price=0.00, previous_price=0.00, displayed_name="Gold Futures")
+    mxn = Asset(ticker="MXN=X", price=0.00, previous_price=0.00, displayed_name="USD/MXN Exchange Rate")
+    exchanges = Watchlist(name="Exchanges")
+    exchanges.assets.extend([bitcoin, gold, mxn])
+    db.session.add_all([bitcoin, gold, mxn, exchanges])
+
+    # By default , MonthMinimum alerts to indexed assets
+    spym_alert = Alert(ticker="SPYM", alert_type=ALERT_TYPE_MONTH_LOW)
+    vgk_alert = Alert(ticker="VGK", alert_type=ALERT_TYPE_MONTH_LOW)
+    vwo_alert = Alert(ticker="VWO", alert_type=ALERT_TYPE_MONTH_LOW)
+    vapu_alert = Alert(ticker="VAPU.L", alert_type=ALERT_TYPE_MONTH_LOW)
+    db.session.add_all([spym_alert, vgk_alert, vwo_alert, vapu_alert])
+
+    ewc_alert = Alert(ticker="EWC", alert_type=ALERT_TYPE_MONTH_LOW)
+    ewz_alert = Alert(ticker="EWZ", alert_type=ALERT_TYPE_MONTH_LOW)
+    inda_alert = Alert(ticker="INDA", alert_type=ALERT_TYPE_MONTH_LOW)
+    mchi_alert = Alert(ticker="MCHI", alert_type=ALERT_TYPE_MONTH_LOW)
+    naftrac_alert = Alert(ticker="NAFTRACISHRS.MX", alert_type=ALERT_TYPE_MONTH_LOW)
+    db.session.add_all([ewc_alert, ewz_alert, inda_alert, mchi_alert, naftrac_alert])
+
+    db.session.commit()
+    
+
+def populate_test_database():
     # Add some assets for testing
     apple = Asset(ticker="AAPL", price=150.00, previous_price=150.00, displayed_name="Apple Inc.")
     amazon = Asset(ticker="AMZN", price=3305.00, previous_price=3305.00, displayed_name="Amazon.com Inc.")
@@ -98,9 +156,13 @@ def delete_all_assets():
     Asset.query.all().delete()
     db.session.commit()
 
+def is_db_empty():
+    return Asset.query.count() == 0 and Alert.query.count() == 0 and Watchlist.query.count() == 0
+
 def clean_database():
     db.session.query(Watchlist).delete()
     db.session.query(Asset).delete()
+    db.session.query(Alert).delete()
     db.session.commit()
         
 def query_all_assets():

@@ -2,6 +2,7 @@ import logging
 
 from ..models.asset import Asset
 from ..persistance.db_manager import get_db_session
+from ..persistance.db_utils import is_db_empty
 from ..services.finantial_data_service import FinancialDataService
 
 logger = logging.getLogger(__name__)
@@ -14,6 +15,10 @@ def update_monthly_stats(app):
 	with app.app_context():
 		try:
 			with get_db_session() as session:
+				if is_db_empty():
+					logger.info("Database is empty, skipping historical price update.")
+					return
+
 				assets = session.query(Asset).all()
 				tickers = [asset.ticker for asset in assets]
 				statistics = FinancialDataService.statistics_in_period(tickers, period="1mo", interval="1d")
