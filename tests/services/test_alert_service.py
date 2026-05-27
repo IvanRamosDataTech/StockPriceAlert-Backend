@@ -12,7 +12,7 @@ def _make_asset(db, ticker="AAPL", price=100.0, min_month_price=90.0):
 
 
 def test_price_below_triggers_when_price_at_threshold(app, db):
-    asset = _make_asset(db, price=49.0)
+    asset = _make_asset(db, price=23.0)
     alert = Alert(ticker=asset.ticker, alert_type=ALERT_TYPE_PRICE_BELOW, price_threshold=23.0)
     db.session.add(alert)
     db.session.commit()
