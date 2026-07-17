@@ -1,0 +1,46 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Environment / secrets — never bake into the image
+.env
+.flaskenv
+
+# SQLite database files (persisted via Docker volume, not in the image)
+instance/
+*.db
+
+# Jupyter notebooks
+*.ipynb
+.ipynb_checkpoints/
+
+# macOS
+.DS_Store
+
+# Git
+.git/
+.gitignore
+
+# Docs and non-runtime files
+docs/
+tests/
+README.md
+CLAUDE.md
+render.yaml
+Procfile
+
+#caches
+.pytest_cache/
+services/__pycache__/
+
+# IDE files
+.vscode/
+
+# Docker files themselves (not needed inside container)
+Dockerfile
+docker-compose.yml
+Caddyfile
