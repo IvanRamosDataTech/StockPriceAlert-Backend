@@ -17,6 +17,9 @@ services:
     image: caddy:2-alpine
     container_name: stockalert-caddy
     restart: unless-stopped
+    dns:
+      - 8.8.8.8       # Google DNS — bypasses the broken systemd-resolved stub
+      - 1.1.1.1       # Cloudflare DNS — fallback
     ports:
       - "80:80"                   # HTTP → HTTPS redirect + Let's Encrypt ACME challenge
       - "443:443"                 # HTTPS — Telegram webhook endpoint
