@@ -27,9 +27,6 @@ def start_scheduler(app):
     if _scheduler and _scheduler.running:
         return _scheduler
 
-    if app.debug and os.environ.get("WERKZEUG_RUN_MAIN") != "true":
-        return None
-
     last_prices_minutes = int(app.config.get("LAST_PRICES_FETCH_INTERVAL", 15))
 
     scheduler = BackgroundScheduler()

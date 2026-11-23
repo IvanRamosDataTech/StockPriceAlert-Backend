@@ -1,0 +1,50 @@
+services:
+
+  app:
+    build: .
+    container_name: stockalert-app
+    restart: unless-stopped
+    env_file:
+      - .env                      # lives on the VPS only — never committed to git
+    volumes:
+      - stockdata:/data           # SQLite database persisted here across rebuilds
+    expose:
+      - "8000"                    # internal only — Caddy proxies to this port
+    networks:
+      - internal
+      - external_caddy   # makes this container reachable by the existing Caddy instance
+
+
+  # caddy:
+  #   image: caddy:2-alpine
+  #   container_name: stockalert-caddy
+  #   restart: unless-stopped
+  #   dns:
+  #     - 8.8.8.8       # Google DNS — bypasses the broken systemd-resolved stub
+  #     - 1.1.1.1       # Cloudflare DNS — fallback
+  #   ports:
+  #     - "80:80"                   # HTTP → HTTPS redirect + Let's Encrypt ACME challenge
+  #     - "443:443"                 # HTTPS — Telegram webhook endpoint
+  #   volumes:
+  #     - ./Caddyfile:/etc/caddy/Caddyfile:ro   # Caddy config
+  #     - caddy_data:/data                       # Persists Let's Encrypt certs across restarts
+  #     - caddy_config:/config                   # Caddy internal state
+  #   networks:
+  #     - internal
+  #   depends_on:
+  #     - app
+  # Caddy is NOT managed here — the existing Caddy instance on this VPS
+  # handles TLS for all services. Add ivanstockalert.duckdns.org to that
+  # Caddy's Caddyfile and connect it to the external_caddy network below.
+
+volumes:
+  stockdata:        # SQLite db file at /data/stockalert.db inside the app container
+  # caddy_data:       # Let's Encrypt certificates
+  # caddy_config:     # Caddy internal config cache
+
+networks:
+  internal:
+    driver: bridge
+  external_caddy:
+    external: true
+    name: n8n_default   # e.g. n8n_default — get from: docker network ls
