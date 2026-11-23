@@ -1,3 +1,4 @@
+from sqlalchemy import func
 from ..persistance.db_manager import db
 from .asset_watchlist import watchlist_asset
 
@@ -10,7 +11,8 @@ class Watchlist(db.Model):
     assets = db.relationship('Asset', secondary=watchlist_asset, back_populates='watchlists')
 
     def name_available(self):
-        existing_watchlist = Watchlist.query.filter_by(name=self.name).first()
+        # Case-insensitive: "Tech" and "tech" are considered the same name
+        existing_watchlist = Watchlist.query.filter(func.lower(Watchlist.name) == self.name.lower()).first()
         return existing_watchlist is None
 
     def __str__(self):

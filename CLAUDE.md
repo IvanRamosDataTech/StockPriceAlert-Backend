@@ -84,6 +84,8 @@ The webhook is `POST /telegram/` in `backend/routes/telegrams.py`. `_process_com
 
 When adding a command, update three places: the handler, the `switcher` dict in `_process_command`, and the text in `_help_command`.
 
+Commands and arguments are case-insensitive. The command name is lowercased in `_process_command`. Tickers go through `_normalize_ticker()` (uppercase) and alert types through `normalize_alert_type()` in `alerts_units.py`, which returns the canonical spelling. Use these helpers for any new command, because `AlertService` compares alert types with exact `==`, so a mis-cased stored type would silently never fire. Watchlist names are unique ignoring case.
+
 Known gaps in this file:
 - `float(args[2])` in `_alert_set_command` and `_alert_update_command` runs outside the `try` block, so a non-numeric price gets no reply.
 - There is no check that the sender matches `FLASK_TELEGRAM_CHAT_ID`.

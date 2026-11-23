@@ -18,6 +18,21 @@ _ALLOWED_ALERT_TYPES = {
     "PriceAbove",
 }
 _PRICE_THRESHOLD_TYPES = {"PriceBelow", "PriceAbove"}
+_ALERT_TYPES_BY_LOWER = {alert_type.lower(): alert_type for alert_type in _ALLOWED_ALERT_TYPES}
+
+
+def normalize_alert_type(alert_type: str) -> str:
+    """Return the canonical spelling of an alert type, ignoring case (e.g. 'pricebelow' -> 'PriceBelow').
+
+    Raises ValueError if the type is not supported. The canonical form matters because
+    AlertService compares alert types with exact string equality.
+    """
+    canonical = _ALERT_TYPES_BY_LOWER.get(str(alert_type).strip().lower())
+    if canonical is None:
+        raise ValueError(
+            f"Invalid alert_type '{alert_type}'. Must be one of: MonthMinimum, MonthMaximum, PriceBelow, PriceAbove"
+        )
+    return canonical
 
 
 def fetch_alerts(asset_ticker: Optional[str] = None) -> Dict[str, List[str] | str]:
@@ -49,11 +64,8 @@ def fetch_alerts(asset_ticker: Optional[str] = None) -> Dict[str, List[str] | st
 
 def create_alert(ticker: str, alert_type: str, target_price: Optional[float]) -> dict:
     """Create a new alert for a given ticker after validating the asset exists."""
-    if alert_type not in _ALLOWED_ALERT_TYPES:
-        raise ValueError(
-            f"Invalid alert_type '{alert_type}'. Must be one of: MonthMinimum, MonthMaximum, PriceBelow, PriceAbove"
-        )
-    
+    alert_type = normalize_alert_type(alert_type)
+
     if alert_type in _PRICE_THRESHOLD_TYPES and target_price is None:
         raise ValueError("target_price is required for PriceBelow and PriceAbove alert types")
 
@@ -94,10 +106,7 @@ def delete_alert(alert_id: int) -> dict:
 def update_alert(alert_id: int, alert_type: str, target_price: Optional[float]) -> dict:
     """Update the alert type/threshold for a given alert ID."""
 
-    if alert_type not in _ALLOWED_ALERT_TYPES:
-        raise ValueError(
-            f"Invalid alert_type '{alert_type}'. Must be one of: MonthMinimum, MonthMaximum, PriceBelow, PriceAbove"
-        )
+    alert_type = normalize_alert_type(alert_type)
 
     if alert_type in _PRICE_THRESHOLD_TYPES and target_price is None:
         raise ValueError("target_price is required for PriceBelow and PriceAbove alert types")

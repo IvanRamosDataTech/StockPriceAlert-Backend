@@ -3,13 +3,17 @@ import logging
 from ..services.telegram_service import TelegramService
 from ..services.finantial_data_service import FinancialDataService
 from ..logic_units.watchlists_units import fetch_watchlists, new_watchlist, add_asset_to_watchlist, remove_asset_from_watchlist, delete_watchlist
-from ..logic_units.alerts_units import fetch_alerts, create_alert, delete_alert, update_alert
+from ..logic_units.alerts_units import fetch_alerts, create_alert, delete_alert, update_alert, normalize_alert_type
 
 from flask import current_app
 
 logger = logging.getLogger(__name__)
 
 telegrams_blueprint = Blueprint('telegrams', __name__, url_prefix='/telegram')
+
+def _normalize_ticker(ticker):
+    """Tickers are stored uppercase, so accept any casing from the user (e.g. 'aapl', 'bTc-usd')."""
+    return ticker.strip().upper()
 
 def _help_command(args):
     help_text = (
@@ -61,10 +65,11 @@ def _info_command(args):
         interval = "1d"
         
         if len(args) == 3:
-            period = args[1]
-            interval = args[2]
-        
-        ticker = args[0].strip().upper()
+            # yfinance expects lowercase units, e.g. "1mo", "5d", "1wk", "ytd"
+            period = args[1].strip().lower()
+            interval = args[2].strip().lower()
+
+        ticker = _normalize_ticker(args[0])
         info = FinancialDataService.get_ticker_info(ticker, period, interval)
         output = f"{info['ticker']}  {info['displayed_name']}:\n\n"
         output += f"General Info\nSector: {info['sector']}\nIndustry: {info['industry']}\n\n"
@@ -120,7 +125,7 @@ def _prices_command(args):
             TelegramService.send_message(current_app, "Missing tickers. Please provide a list of asset tickers e.g. /prices AAPL GOOGL MSFT")
             return
         
-        tickers = [arg.strip().upper() for arg in args if arg.strip()]
+        tickers = [_normalize_ticker(arg) for arg in args if arg.strip()]
         prices = FinancialDataService.latest_prices(tickers)
         output = ""
         for ticker in tickers:
@@ -184,8 +189,8 @@ def _watchlist_add_asset_command(args):
         return
     
     watchlist_id = args[0]
-    ticker = args[1]
-    
+    ticker = _normalize_ticker(args[1])
+
     try:
         updated_watchlist = add_asset_to_watchlist(watchlist_id, ticker)
         TelegramService.send_message(current_app, f"Asset '{ticker}' added to watchlist '{updated_watchlist['name']}' successfully.")
@@ -207,8 +212,8 @@ def _watchlist_remove_asset_command(args):
         return
 
     watchlist_id = args[0]
-    ticker = args[1]
-    
+    ticker = _normalize_ticker(args[1])
+
     try:
         updated_watchlist = remove_asset_from_watchlist(watchlist_id, ticker)
         TelegramService.send_message(current_app, f"Asset '{ticker}' removed from watchlist '{updated_watchlist['name']}' successfully.")
@@ -244,7 +249,7 @@ def _watchlist_delete_command(args):
 
 def _alerts_command(args):
     try:
-        ticker = args[0] if len(args) > 0 else None
+        ticker = _normalize_ticker(args[0]) if len(args) > 0 else None
         message = fetch_alerts(ticker)
         output = ""
         if len(message['alerts']) == 0:
@@ -274,11 +279,12 @@ def _alert_set_command(args):
         TelegramService.send_message(current_app, "Missing parameters. Please provide at least an asset ticker and an alert type e.g. /alert_set AAPL PriceAbove 150")
         return
     
-    ticker = args[0]
+    ticker = _normalize_ticker(args[0])
     alert_type = args[1]
     target_price = float(args[2]) if len(args) > 2 else None
-    
+
     try:
+        alert_type = normalize_alert_type(alert_type)  # 'pricebelow' -> 'PriceBelow'
         create_alert(ticker, alert_type, target_price)
         TelegramService.send_message(current_app, f"Alert created successfully for {ticker} with type {alert_type} and target price {target_price}.")
     except ValueError as ve:
@@ -320,6 +326,7 @@ def _alert_update_command(args):
     target_price = float(args[2]) if len(args) > 2 else None
     
     try:
+        alert_type = normalize_alert_type(alert_type)  # 'pricebelow' -> 'PriceBelow'
         update_status = update_alert(alert_id, alert_type, target_price)
         TelegramService.send_message(current_app, update_status["message"])
     except ValueError as ve:

@@ -106,7 +106,8 @@ def update_watchlist(watchlist_id: int, new_name: str) -> dict:
 		if not watchlist:
 			raise LookupError(f"Watchlist with ID {watchlist_id} not found")
 
-		if watchlist.name != new_name and not Watchlist(name=new_name).name_available():
+		# Case-only renames (e.g. "tech" -> "Tech") are allowed; they don't clash with another watchlist
+		if watchlist.name.lower() != new_name.lower() and not Watchlist(name=new_name).name_available():
 			raise ValueError(f"Another watchlist with name '{new_name}' already exists")
 
 		watchlist.name = new_name
