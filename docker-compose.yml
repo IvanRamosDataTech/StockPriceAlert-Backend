@@ -3,6 +3,7 @@ services:
   app:
     build: .
     container_name: stockalert-app
+    image: stockalertapp:0.5.0
     restart: unless-stopped
     env_file:
       - .env                      # lives on the VPS only — never committed to git
