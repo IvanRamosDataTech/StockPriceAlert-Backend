@@ -23,7 +23,7 @@ def _help_command(args):
         "/info {ticker} {period} {interval} - Returns detailed information for a given asset ticker. Optionally provide a period and interval.\n"
         "/ex_rate - Returns the latest exchange rate for USD/MXN.\n"
         "/convert {amount} - Converts a given amount from USD to MXN using the latest exchange rate. E.g. /convert 100\n"
-        "/prices {ticker1 ticker2 ...} - Returns the latest prices for a list of asset tickers. Asset tickers should be provided as space separated values.\n"
+        "/prices {ticker_or_watchlist ...} - Returns the latest prices for asset tickers and/or whole watchlists. Provide space separated tickers and/or single-word watchlist names (not case-sensitive); a watchlist name returns every asset in it. A multi-word watchlist name works only when it is the sole argument. E.g. /prices AAPL GOOGL, /prices Indexed, /prices Tech Stocks, /prices AAPL Bonds\n"
         "/watchlists {watchlist_name} - Returns all user's watchlists. Optionally, can provide a name to filter.\n"
         "/watchlist_new {watchlist_name} - Creates a new watchlist with the given name.\n"
         "/watchlist_add {watchlist_id} {asset_ticker} - Adds an asset to a watchlist.\n"
@@ -119,22 +119,71 @@ def _convert_command(args):
         TelegramService.send_message(current_app, f"Error converting currency: {e}")
         return
 
+def _resolve_prices_targets(args):
+    """Split /prices arguments into sections of tickers.
+
+    Each argument is either a watchlist name (case-insensitive, expands to all its assets)
+    or a ticker. Watchlist names may contain spaces, so the whole argument string is tried
+    as a single name first. If a word is both a watchlist name and a ticker, the watchlist wins.
+
+    Returns a list of (label, tickers) tuples. label is the watchlist name, or None for
+    loose tickers.
+    """
+    watchlists, _ = fetch_watchlists()
+    by_name = {watchlist["name"].lower(): watchlist for watchlist in watchlists}
+
+    def tickers_of(watchlist):
+        return [asset["ticker"] for asset in watchlist["assets"]]
+
+    whole = by_name.get(" ".join(args).strip().lower())
+    if whole:
+        return [(whole["name"], tickers_of(whole))]
+
+    loose_tickers = []
+    watchlist_sections = []
+    for arg in args:
+        if not arg.strip():
+            continue
+        watchlist = by_name.get(arg.strip().lower())
+        if watchlist:
+            watchlist_sections.append((watchlist["name"], tickers_of(watchlist)))
+        else:
+            loose_tickers.append(_normalize_ticker(arg))
+
+    sections = [(None, loose_tickers)] if loose_tickers else []
+    return sections + watchlist_sections
+
 def _prices_command(args):
     try:
         if len(args) == 0:
-            TelegramService.send_message(current_app, "Missing tickers. Please provide a list of asset tickers e.g. /prices AAPL GOOGL MSFT")
+            TelegramService.send_message(current_app, "Missing tickers or watchlist names. Please provide asset tickers and/or watchlist names e.g. /prices AAPL GOOGL MSFT or /prices Indexed")
             return
-        
-        tickers = [_normalize_ticker(arg) for arg in args if arg.strip()]
-        prices = FinancialDataService.latest_prices(tickers)
+
+        sections = _resolve_prices_targets(args)
+
+        # Fetch every distinct ticker once, even if it appears in several sections
+        all_tickers = list(dict.fromkeys(ticker for _, tickers in sections for ticker in tickers))
+        if not all_tickers:
+            names = ", ".join(f"'{label}'" for label, _ in sections)
+            TelegramService.send_message(current_app, f"Watchlist {names} has no assets yet. Add one with /watchlist_add {{watchlist_id}} {{asset_ticker}}")
+            return
+
+        prices = FinancialDataService.latest_prices(all_tickers)
         output = ""
-        for ticker in tickers:
-            output += f"{ticker} {prices[ticker]['original_price']}"
-            if not ".MX" in ticker:
-                output += f", precio justo {prices[ticker]['converted_price']} MXN\n"
-            else:
-                output += "MXN\n"
-            
+        for label, tickers in sections:
+            if label is not None:
+                output += f'"{label}":\n'
+                if not tickers:
+                    output += "  Empty\n"
+            for ticker in tickers:
+                output += f"{ticker} {prices[ticker]['original_price']}"
+                if not ".MX" in ticker:
+                    output += f", precio justo {prices[ticker]['converted_price']} MXN\n"
+                else:
+                    output += "MXN\n"
+            if label is not None:
+                output += "\n"
+
         TelegramService.send_message(current_app, output)
     except Exception as e:
         logger.error(f"Error processing prices command: {e}")
