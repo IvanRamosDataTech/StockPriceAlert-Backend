@@ -25,7 +25,7 @@ class AlertService:
         """
 
         def trigger_alert(alert, message):
-            alert.update_trigger_time()
+            alert.update_trigger(alert.asset.price)
             logger.info(message)
             TelegramService.send_message(app, message)
 

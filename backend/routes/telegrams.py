@@ -261,7 +261,10 @@ def _alerts_command(args):
                 if alert['threshold'] is not None:
                     output += f" {alert['threshold']} "
                 if alert['triggered_at']:
-                    output += f"(last triggered at: {alert['triggered_at']})"
+                    output += f"(last triggered at: {alert['triggered_at']}"
+                    if alert['triggered_price'] is not None:
+                        output += f" at price {alert['triggered_price']} USD"
+                    output += ")"
                 output += "\n"
 
         TelegramService.send_message(current_app, output)

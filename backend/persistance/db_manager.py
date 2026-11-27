@@ -3,12 +3,32 @@ from contextlib import contextmanager
 
 db = SQLAlchemy()
 
+# Columns added after the first release. create_all() never alters existing tables,
+# so these are added with ALTER TABLE when missing: (table, column, SQL type).
+_ADDED_COLUMNS = [
+    ("alert", "last_triggered_price", "FLOAT"),
+]
+
+# Lightweight migration is fine for this PoC. WE dont' want touse an specilized migration tool at the moment.
+# This approach simply checks for missing columns and adds them if necessary.
+def ensure_columns():
+    """Idempotently add columns that are missing from existing tables."""
+    from sqlalchemy import inspect, text
+    inspector = inspect(db.engine)
+    for table, column, sql_type in _ADDED_COLUMNS:
+        existing = {col["name"] for col in inspector.get_columns(table)}
+        if column not in existing:
+            with db.engine.begin() as conn:
+                conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {column} {sql_type}"))
+            print(f"✓ Added column {table}.{column}")
+
 def init_db(app):
     """Initialize database with Flask app"""
     db.init_app(app)
     with app.app_context():
         from .db_utils import is_db_empty, populate_database
         db.create_all()
+        ensure_columns()
         if is_db_empty():
             print("Seeding default data...")
             populate_database()

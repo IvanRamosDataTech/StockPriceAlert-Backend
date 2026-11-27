@@ -114,6 +114,7 @@ SQLite file at `instance/stockalert.db` in development. In Docker it lives on th
 
 - `Asset` (ticker PK) → has many `Alert`s; M:M with `Watchlist` via `watchlist_asset`
 - Cascade deletes: removing a watchlist cleans up M2M rows; if an asset becomes orphaned it is deleted; deleting an asset cascades to its alerts.
+- There are no migrations. `db.create_all()` never alters existing tables, so columns added after the first release go in `_ADDED_COLUMNS` in `db_manager.py`. `ensure_columns()` runs from `init_db()` and adds them with `ALTER TABLE` if missing (e.g. `alert.last_triggered_price`, the asset price when the alert last fired).
 - Use the `get_db_session()` context manager from `backend/persistance/db_manager.py` for all writes. It auto-commits on success and rolls back on exception.
 - `db_utils.py` also has helpers for the Flask shell (`populate_test_database()`, `clean_database()`, `update_asset()`, `query_*()`). Load them inside `flask shell` only, because they need an app context.
 

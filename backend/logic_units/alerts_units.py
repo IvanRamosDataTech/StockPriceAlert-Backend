@@ -57,6 +57,7 @@ def fetch_alerts(asset_ticker: Optional[str] = None) -> Dict[str, List[str] | st
 							"type": alert.alert_type,
 							"threshold": alert.price_threshold,
                             "triggered_at": alert.last_triggered_at.isoformat() if alert.last_triggered_at else None,
+                            "triggered_price": alert.last_triggered_price,
 						}
 						for alert in alerts
 					]}

@@ -16,9 +16,11 @@ class Alert(db.Model):
     alert_type = db.Column(db.String(20), nullable=False)  #  month low, fall below, rise above"
     price_threshold = db.Column(db.Float, nullable=True)
     last_triggered_at = db.Column(db.DateTime, nullable=True)
+    last_triggered_price = db.Column(db.Float, nullable=True)
 
-    def update_trigger_time(self):
+    def update_trigger(self, price):
         self.last_triggered_at = now_cts_time()
+        self.last_triggered_price = price
 
     def __str__(self):
         info = f"<Alert {self.id} - {self.alert_type}  {self.price_threshold} for {self.ticker}>"
