@@ -44,7 +44,7 @@ Test setup lives in `tests/conftest.py`:
 - The `db` fixture wipes all tables after each test.
 - External calls are mocked with `unittest.mock.patch`, e.g. `patch("backend.services.alert_service.TelegramService.send_message")`.
 
-Coverage is currently limited to `AlertService` (`tests/services/`). The `tests/routes/` and `tests/logic_units/` directories are empty placeholders.
+Coverage is limited to `AlertService` (`tests/services/`), alert/watchlist logic units (`tests/logic_units/`), the DB column migration, and the Telegram `/prices` and `/convert` handlers (`tests/routes/`, which call the handler functions directly with `current_app` patched services).
 
 ## Architecture
 
@@ -78,9 +78,11 @@ The webhook is `POST /telegram/` in `backend/routes/telegrams.py`. `_process_com
 | Group | Commands |
 |---|---|
 | Info | `/help`, `/search`, `/info`, `/prices` |
-| FX | `/ex_rate`, `/convert` (USD to MXN) |
+| FX | `/ex_rate`, `/convert [BASE/QUOTE] {amount}` (pair optional, defaults to USD/MXN) |
 | Watchlists | `/watchlists`, `/watchlist_new`, `/watchlist_add`, `/watchlist_remove`, `/watchlist_delete` |
 | Alerts | `/alerts`, `/alert_set`, `/alert_unset`, `/alert_update` |
+
+`/convert` validates the pair against `SUPPORTED_CURRENCY_PAIRS` in `finantial_data_service.py` (a curated set of 10 major currencies, 88 pairs; yfinance cannot list its own pairs). The unsupported-pair error lists them automatically, but the "Common pairs" and "Currencies" text in `_help_command` is hand-written, so update it too when adding currencies.
 
 When adding a command, update three places: the handler, the `switcher` dict in `_process_command`, and the text in `_help_command`.
 

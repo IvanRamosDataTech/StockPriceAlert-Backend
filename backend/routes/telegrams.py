@@ -1,7 +1,8 @@
 from flask import Blueprint, jsonify, request
 import logging
+import math
 from ..services.telegram_service import TelegramService
-from ..services.finantial_data_service import FinancialDataService
+from ..services.finantial_data_service import FinancialDataService, SUPPORTED_CURRENCIES, SUPPORTED_CURRENCY_PAIRS
 from ..logic_units.watchlists_units import fetch_watchlists, new_watchlist, add_asset_to_watchlist, remove_asset_from_watchlist, delete_watchlist
 from ..logic_units.alerts_units import fetch_alerts, create_alert, delete_alert, update_alert, normalize_alert_type
 
@@ -22,7 +23,11 @@ def _help_command(args):
         "/search {query} - Searches for assets matching with given term. \n"
         "/info {ticker} {period} {interval} - Returns detailed information for a given asset ticker. Optionally provide a period and interval.\n"
         "/ex_rate - Returns the latest exchange rate for USD/MXN.\n"
-        "/convert {amount} - Converts a given amount from USD to MXN using the latest exchange rate. E.g. /convert 100\n"
+        "/convert {currency pair} {amount} - Converts an amount from the first currency of the pair to the second one using the latest exchange rate. "
+        "Pair format is BASE/QUOTE (not case-sensitive). If the pair is omitted, USD/MXN is used. "
+        "Common pairs: USD/MXN, EUR/MXN, GBP/MXN, EUR/USD, GBP/USD, USD/JPY, USD/CAD, USD/CHF, AUD/USD, USD/CNY, USD/BRL. "
+        "Currencies: USD, MXN, EUR, GBP, JPY, CAD, CHF, AUD, CNY, BRL (send an unsupported pair to see the full list). "
+        "E.g. /convert 100, /convert EUR/MXN 100, /convert gbp/usd 50\n"
         "/prices {ticker_or_watchlist ...} - Returns the latest prices for asset tickers and/or whole watchlists. Provide space separated tickers and/or single-word watchlist names (not case-sensitive); a watchlist name returns every asset in it. A multi-word watchlist name works only when it is the sole argument. E.g. /prices AAPL GOOGL, /prices Indexed, /prices Tech Stocks, /prices AAPL Bonds\n"
         "/watchlists {watchlist_name} - Returns all user's watchlists. Optionally, can provide a name to filter.\n"
         "/watchlist_new {watchlist_name} - Creates a new watchlist with the given name.\n"
@@ -97,23 +102,44 @@ def _exchange_rate_command(args):
         TelegramService.send_message(current_app, f"Error fetching exchange rate {rate}: {e}")
         return
 
+DEFAULT_CURRENCY_PAIR = "USD/MXN"
+
 def _convert_command(args):
+    usage = "Usage: /convert {currency pair} {amount}. E.g. /convert EUR/MXN 100. The pair is optional and defaults to USD/MXN, e.g. /convert 100"
     try:
-        if len(args) == 0:
-            TelegramService.send_message(current_app, "Please provide an amount to convert after the /convert command. E.g. /convert 100")
+        if len(args) == 0 or len(args) > 2:
+            TelegramService.send_message(current_app, f"Please provide an amount to convert. {usage}")
             return
-        
-        amount = float(args[0])
-        rate = "USD/MXN"
-        exchange_rate = FinancialDataService.exchange_rate(pair=rate)
+
+        if len(args) == 1:
+            if "/" in args[0]:
+                TelegramService.send_message(current_app, f"Missing amount. {usage}")
+                return
+            pair, amount_text = DEFAULT_CURRENCY_PAIR, args[0]
+        else:
+            pair, amount_text = args[0].strip().upper(), args[1]
+
+        if pair not in SUPPORTED_CURRENCY_PAIRS:
+            TelegramService.send_message(
+                current_app,
+                f"Unsupported currency pair '{args[0]}'. Use the format BASE/QUOTE, e.g. EUR/MXN.\n\n Common pairs: USD/MXN, EUR/MXN, GBP/MXN, EUR/USD, GBP/USD, USD/JPY, USD/CAD, USD/CHF, AUD/USD, USD/CNY, USD/BRL.",
+            )
+            return
+
+        amount = float(amount_text)
+        if not math.isfinite(amount):
+            raise ValueError("amount must be a finite number")
+
+        base, quote = pair.split("/")
+        exchange_rate = FinancialDataService.exchange_rate(pair=pair)
         if exchange_rate:
             converted_amount = round(amount * exchange_rate['rate'], 2)
-            output = f"{converted_amount} MXN at rate {round(exchange_rate['rate'], 4)} MXN/USD"
+            output = f"{amount:g} {base} = {converted_amount} {quote} at rate {round(exchange_rate['rate'], 4)} {quote}/{base}"
             TelegramService.send_message(current_app, output)
         else:
-            TelegramService.send_message(current_app, f"Could not retrieve exchange rate for {rate}.")
+            TelegramService.send_message(current_app, f"Could not retrieve exchange rate for {pair}.")
     except ValueError:
-        TelegramService.send_message(current_app, "Invalid amount provided. Please provide a numeric value to convert. E.g. /convert 100")
+        TelegramService.send_message(current_app, f"Invalid amount provided. Please provide a numeric value to convert. {usage}")
     except Exception as e:
         logger.error(f"Error converting currency: {e}")
         TelegramService.send_message(current_app, f"Error converting currency: {e}")

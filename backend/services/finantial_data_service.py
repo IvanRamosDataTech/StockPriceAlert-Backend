@@ -1,3 +1,4 @@
+import itertools
 import statistics
 
 import yfinance as yf
@@ -5,6 +6,17 @@ from datetime import datetime, timedelta
 import logging
 
 logger = logging.getLogger(__name__)
+
+# yfinance has no endpoint that lists its currency pairs, so this is a curated set of
+# major currencies. Every "BASE/QUOTE" combination was checked against yf.Lookup (yfinance 1.1.0);
+# the two below returned no data and are excluded.
+SUPPORTED_CURRENCIES = ("USD", "MXN", "EUR", "GBP", "JPY", "CAD", "CHF", "AUD", "CNY", "BRL")
+_UNAVAILABLE_CURRENCY_PAIRS = {"CNY/MXN", "BRL/CAD"}
+SUPPORTED_CURRENCY_PAIRS = tuple(
+    f"{base}/{quote}"
+    for base, quote in itertools.permutations(SUPPORTED_CURRENCIES, 2)
+    if f"{base}/{quote}" not in _UNAVAILABLE_CURRENCY_PAIRS
+)
 
 class FinancialDataService:
 
